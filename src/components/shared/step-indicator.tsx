@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils"
+import { Check } from "lucide-react"
 
 interface Step {
   label: string
@@ -18,37 +19,52 @@ export function StepIndicator({
   return (
     <nav
       aria-label="Progress"
-      className={cn(
-        "flex items-center justify-center gap-2 text-xs text-muted-foreground",
-        className
-      )}
+      className={cn("flex items-center gap-0", className)}
     >
       {steps.map((step, idx) => {
         const isCurrent = idx === currentIndex
         const isDone = idx < currentIndex
         return (
-          <div key={step.label} className="flex items-center gap-2">
-            <div
-              className={cn(
-                "flex h-6 items-center gap-1.5 rounded-full border px-2.5",
-                isCurrent && "border-primary text-foreground",
-                isDone && "border-primary/40 text-muted-foreground",
-                !isCurrent && !isDone && "border-border"
-              )}
-            >
-              <span
+          <div key={step.label} className="flex items-center">
+            <div className="flex items-center gap-2.5">
+              <div
                 className={cn(
-                  "flex size-3.5 items-center justify-center rounded-full",
-                  isCurrent && "bg-primary text-primary-foreground",
-                  isDone && "bg-primary/40",
-                  !isCurrent && !isDone && "bg-transparent"
+                  "flex size-8 items-center justify-center rounded-full text-xs font-semibold transition-all duration-300",
+                  isDone &&
+                    "bg-primary text-primary-foreground",
+                  isCurrent &&
+                    "bg-primary text-primary-foreground ring-4 ring-primary/20",
+                  !isCurrent && !isDone &&
+                    "bg-muted text-muted-foreground"
                 )}
               >
-                {idx + 1}
+                {isDone ? (
+                  <Check className="size-4" />
+                ) : (
+                  <span>{idx + 1}</span>
+                )}
+              </div>
+              <span
+                className={cn(
+                  "text-sm font-medium transition-colors",
+                  isDone && "text-foreground",
+                  isCurrent && "text-foreground",
+                  !isCurrent && !isDone && "text-muted-foreground"
+                )}
+              >
+                {step.label}
               </span>
-              <span>{step.label}</span>
             </div>
-            {idx < steps.length - 1 && <span className="text-border">→</span>}
+            {idx < steps.length - 1 && (
+              <div
+                className={cn(
+                  "mx-4 h-px w-12 sm:w-20 transition-colors duration-300",
+                  idx < currentIndex
+                    ? "bg-primary"
+                    : "bg-border"
+                )}
+              />
+            )}
           </div>
         )
       })}

@@ -22,7 +22,7 @@ export function SeverityBadge({
   return (
     <Badge
       className={cn(
-        "rounded-sm px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider",
+        "rounded-md px-1.5 py-0.5 text-[0.65rem] font-medium",
         severityClasses[severity],
         className
       )}

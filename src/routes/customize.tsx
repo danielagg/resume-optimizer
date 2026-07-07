@@ -125,9 +125,9 @@ function CustomizePage() {
       <div className="mb-6">
         <Link
           to="/builder"
-          className="text-sm text-muted-foreground underline hover:text-foreground"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          ← Edit Resume
+          ← Edit resume
         </Link>
       </div>
 

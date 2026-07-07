@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Trash2, Plus } from "lucide-react"
 import { StepIndicator } from "@/components/shared/step-indicator"
 import { ResumeTemplate } from "@/components/template/resume-template"
@@ -79,9 +80,11 @@ function BuilderPage() {
       </div>
 
       {Object.keys(errors).length > 0 && (
-        <div className="mb-6 rounded-md border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
-          Please fix the highlighted fields before continuing.
-        </div>
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>
+            Please fix the highlighted fields before continuing.
+          </AlertDescription>
+        </Alert>
       )}
 
       <div className="space-y-6">
@@ -205,10 +208,14 @@ function BuilderPage() {
         </div>
       </div>
 
-      <div className="mt-12">
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-          Live preview
-        </h2>
+      <div className="mt-16 border-t border-border/50 pt-10">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-border/30" />
+          <h2 className="text-xs font-medium tracking-wide text-muted-foreground">
+            Live preview
+          </h2>
+          <div className="h-px flex-1 bg-border/30" />
+        </div>
         <ResumeTemplate resume={resume} />
       </div>
     </main>

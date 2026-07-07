@@ -156,39 +156,40 @@ function PreviewPage() {
           variant="ghost"
           size="sm"
           onClick={() => navigate({ to: "/customize" })}
+          className="gap-1"
         >
-          ← Back to Customize
+          ← Back
         </Button>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setRealignOpen(true)}
-            disabled={realignLoading}
-          >
-            Re-align to original
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() =>
-              downloadResumePdf(
-                alignedResume,
-                `${alignedResume.fullName}-aligned`
-              )
-            }
-          >
-            Download Aligned CV
-          </Button>
+        <Button
+          variant="outline"
+          onClick={() => setRealignOpen(true)}
+          disabled={realignLoading}
+        >
+          Re-align
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() =>
+            downloadResumePdf(
+              alignedResume,
+              `${alignedResume.fullName}-aligned`
+            )
+          }
+        >
+          Download PDF
+        </Button>
         </div>
       </div>
 
       <ResumeTemplate resume={alignedResume} />
 
-      <div className="mt-8 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium">Notes</h2>
+      <div className="mt-12 space-y-4">
+        <div className="flex items-center justify-between border-b border-border/50 pb-4">
+          <h2 className="text-lg font-semibold tracking-tight">Notes</h2>
           {notes.length > 0 && (
             <p className="text-xs text-muted-foreground">
-              Tick the ones you want to address, then Revise.
+              Tick items to address, then revise.
             </p>
           )}
         </div>
@@ -203,18 +204,19 @@ function PreviewPage() {
         <NotesList notes={notes} onRevise={handleRevise} loading={loading} />
       </div>
 
-      <div className="mt-8 flex justify-between">
+      <div className="mt-12 flex items-center justify-between border-t border-border/50 pt-8">
         <Link
           to="/builder"
-          className="text-sm text-muted-foreground underline hover:text-foreground"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          ← Back to Builder
+          ← Edit resume
         </Link>
         <Button
-          variant="outline"
+          variant="ghost"
+          size="sm"
           onClick={() => navigate({ to: "/customize" })}
         >
-          Re-align with a different posting →
+          New posting →
         </Button>
       </div>
 
@@ -222,7 +224,7 @@ function PreviewPage() {
       <Dialog open={realignOpen} onOpenChange={setRealignOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Re-align to original</DialogTitle>
+            <DialogTitle>Re-align to original CV</DialogTitle>
             <DialogDescription>
               This will discard the current aligned CV and all revision work
               for this session, then run a fresh Alignment against your current
