@@ -108,9 +108,12 @@ interface Resume {
 - **@react-pdf/renderer** for PDF export.
 - **Skip TanStack Query** (no remote data; only a one-shot OpenAI mutation).
 
+## Theme
+
+Light + dark mode both supported, with a visible toggle in the app (the shadcn preset already ships a `ThemeProvider` + 'd' keyboard shortcut). Persisted via localStorage.
+
 ## Excluded from v1
 
-- Dark mode (light only).
 - Auth / user management (Get Started just routes to Builder, no session).
 - Persistence of Aligned Resume + Notes.
 - URL-based job posting fetching (paste raw text only).

@@ -1,6 +1,6 @@
 # Resume Optimizer
 
-A small SPA that lets a user input their CV data, align it toward a specific job posting via an LLM, preview the tailored CV, and export it to PDF. No backend, no persistence beyond localStorage.
+A small SPA that lets a user input their CV data, align it toward a specific job posting via an LLM, preview the tailored CV, and export it to PDF. No backend, no persistence beyond localStorage. Supports light and dark themes.
 
 ## Language
 
