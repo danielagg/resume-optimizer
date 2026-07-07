@@ -1,0 +1,3 @@
+# 0001 — Pure SPA with BYO OpenAI key (no backend)
+
+The app is a pure SPA with no backend: resume data, alignment inputs, and the OpenAI API key all live in the browser's localStorage. The user supplies their own OpenAI key, which is stored alongside the resume data and used to call the OpenAI API directly from the browser. We chose this over a thin serverless backend to keep deployment scope minimal and to avoid owning per-call API costs, accepting the UX cost of requiring the user to bring their own key.
