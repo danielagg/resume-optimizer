@@ -1,13 +1,13 @@
 # Resume Optimizer — Design Spec
 
-Resolved during the v1 grilling session (26 branches) and the v2 grilling session (17 branches). Source of truth for building.
+Resolved across two grilling sessions (26 + 17 branches). Source of truth for building.
 
 ## Architecture
 
 - **Pure SPA**, no backend. (ADR 0001)
 - **BYO OpenAI key**: user pastes their own key on `/customize`, stored alongside resume data in localStorage.
 - **Input Resume** persists in localStorage → pre-populates Builder on next visit.
-- **Aligned Resume + Notes** are ephemeral (Zustand, dies with the tab — close the tab, lose the alignment). Multi-session persistence is deferred to v3 (see `docs/v3-sessions-notes.md`).
+- **Aligned Resume + Notes** are ephemeral (Zustand, dies with the tab — close the tab, lose the alignment). Multi-session persistence is an upcoming feature (see `docs/upcoming-sessions-notes.md`).
 
 ## Domain Language
 
@@ -133,7 +133,7 @@ Reused for both passes — the call site (`alignResume()` vs `reviseResume()`) d
   - User message: `{ resume, job_posting }` JSON.
   - `response_format: json_object` returning `{ alignedResume: Resume, notes: Note[] }`.
 
-## Preview & Notes UI (v2)
+## Preview & Notes UI
 
 - Aligned Resume via Template (same component as Builder's live preview).
 - **Notes section** below the Resume — a list of Cards, one per Note:
@@ -181,7 +181,7 @@ Reused for both passes — the call site (`alignResume()` vs `reviseResume()`) d
 - **React 19** + Vite.
 - **TanStack Router** for routing (file-based, auto-generated route tree via `@tanstack/router-plugin`).
 - **Zustand** for the alignment state store (`{ alignedResume, notes, jobPosting }`).
-- **shadcn/ui** + Tailwind v4 (via preset) + shadcn `badge` component (added in v2 for severity badges).
+- **shadcn/ui** + Tailwind v4 (via preset) + shadcn `badge` component for severity badges.
 - **@react-pdf/renderer** for PDF export.
 - **openai** SDK for the OpenAI call (BYO key from localStorage).
 - **zod** for runtime schema validation (Resume shape, Note shape, OpenAI response parsing).
@@ -192,11 +192,11 @@ Reused for both passes — the call site (`alignResume()` vs `reviseResume()`) d
 
 Light + dark mode both supported, with a visible toggle in the app (the shadcn preset already ships a `ThemeProvider` + 'd' keyboard shortcut). Persisted via localStorage.
 
-## Excluded from v1/v2
+## Excluded
 
 - Auth / user management (Get Started just routes to Builder, no session).
-- Persistence of Aligned Resume + Notes (ephemeral in Zustand; deferred to v3 Sessions).
+- Persistence of Aligned Resume + Notes (ephemeral in Zustand; upcoming feature — see `docs/upcoming-sessions-notes.md`).
 - URL-based job posting fetching (paste raw text only).
-- Multi-session support / session picker / per-session original-Resume snapshots (deferred to v3 — see `docs/v3-sessions-notes.md`).
+- Multi-session support / session picker / per-session original-Resume snapshots (upcoming feature — see `docs/upcoming-sessions-notes.md`).
 - Revision history / undo / compare-revisions (Revision is destructive at the UI level).
 - Open socials list expansion beyond `{label, url}` fields.

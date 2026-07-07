@@ -29,15 +29,19 @@ The free-text job description the user pastes into the Customize page as the tar
 _Avoid_: listing, job ad, role
 
 **Aligned Resume**:
-The Resume after Alignment — content rephrased or reordered to emphasize fit with the Job Posting, drawn only from data the user already input.
+The Resume after Alignment — content rephrased or reordered to emphasize fit with the Job Posting, drawn only from data the user already input. Always a one-shot snapshot from the LLM; edits to the input Resume do not retroactively rewrite past Aligned Resumes.
 _Avoid_: optimized CV, matched resume
 
+**Session**:
+One Alignment-and-Revision flow tied to a specific Job Posting. Contains the Job Posting text, the current Aligned Resume, the current Notes, a name, and a creation date. References the shared canonical input Resume (not a frozen snapshot) — editing the input Resume in Builder propagates to future Alignment calls for any session, but past Aligned Resumes stay as snapshots. Reverting a session re-runs Alignment against the live input Resume plus the session's stored Job Posting.
+_Avoid_: version, save, draft, profile
+
 **Notes**:
-The list of Note items returned by the LLM alongside the Aligned Resume. Surfaced to the user on the Preview page — in v2, action-grade Notes can be ticked and addressed via a Revision pass; Info Notes are read-only awareness.
+The list of Note items returned by the LLM alongside the Aligned Resume. Surfaced to the user on the Preview page — action-grade Notes can be ticked and addressed via a Revision pass; Info Notes are read-only awareness.
 _Avoid_: suggestions, tips, feedback
 
 **Note**:
-A single structured feedback item returned by the LLM alongside the Aligned Resume. Each Note has a severity (Critical, Important, Medium, Low, Info), free-text body, and an optional `suggestedFix` (a concrete proposed edit the LLM couldn't make during Alignment because it would violate the contract). Info-severity Notes have no `suggestedFix` and are pure awareness ("you have a 6-month gap — prepare an explanation"). In v2, action-grade Notes can be ticked by the user to address them, with an optional free-text response, then submitted via a Revision pass.
+A single structured feedback item returned by the LLM alongside the Aligned Resume. Each Note has a severity (Critical, Important, Medium, Low, Info), free-text body, and an optional `suggestedFix` (a concrete proposed edit the LLM couldn't make during Alignment because it would violate the contract). Info-severity Notes have no `suggestedFix` and are pure awareness ("you have a 6-month gap — prepare an explanation"). Action-grade Notes can be ticked by the user to address them, with an optional free-text response, then submitted via a Revision pass.
 _Avoid_: suggestion, tip, feedback item
 
 **Languages**:
@@ -49,5 +53,5 @@ Open list of `{ label, url }` pairs the user adds to the Resume header — e.g. 
 _Avoid_: links, network profiles, contacts
 
 **Template**:
-The static presentation component that renders a Resume (aligned or not) for preview and PDF export. v1 is a single hardcoded layout.
+The static presentation component that renders a Resume (aligned or not) for preview and PDF export. Currently a single hardcoded layout.
 _Avoid_: layout, theme, design

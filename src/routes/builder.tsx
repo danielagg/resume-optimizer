@@ -16,7 +16,7 @@ import { Trash2, Plus } from "lucide-react"
 import { StepIndicator } from "@/components/shared/step-indicator"
 import { ResumeTemplate } from "@/components/template/resume-template"
 import { downloadResumePdf } from "@/components/template/download-pdf"
-import { loadResume, saveResume } from "@/lib/storage"
+import { loadOriginalResume, saveOriginalResume } from "@/lib/storage"
 import {
   emptyResume,
   languageLevels,
@@ -37,7 +37,7 @@ const STEPS = [
 
 function BuilderPage() {
   const navigate = useNavigate()
-  const [resume, setResume] = useState<Resume>(() => loadResume() ?? emptyResume())
+  const [resume, setResume] = useState<Resume>(() => loadOriginalResume() ?? emptyResume())
   const [submitted, setSubmitted] = useState(false)
 
   const errors = useMemo<Record<string, string>>(() => {
@@ -54,7 +54,7 @@ function BuilderPage() {
   }, [resume, submitted])
 
   useEffect(() => {
-    saveResume(resume)
+    saveOriginalResume(resume)
   }, [resume])
 
   const update = <K extends keyof Resume>(key: K, value: Resume[K]) => {
@@ -68,7 +68,7 @@ function BuilderPage() {
       window.scrollTo({ top: 0, behavior: "smooth" })
       return
     }
-    saveResume(resume)
+    saveOriginalResume(resume)
     navigate({ to: "/customize" })
   }
 

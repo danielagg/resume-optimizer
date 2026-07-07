@@ -79,6 +79,15 @@ export const alignmentResponseSchema = z.object({
 })
 export type AlignmentResponse = z.infer<typeof alignmentResponseSchema>
 
+export interface Session {
+  name: string
+  jobPosting: string
+  alignedResume: Resume | null
+  notes: Note[]
+  createdAt: string
+  updatedAt: string
+}
+
 export function emptyResume(): Resume {
   return {
     fullName: "",

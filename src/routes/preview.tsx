@@ -6,6 +6,14 @@ import {
   redirect,
 } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { StepIndicator } from "@/components/shared/step-indicator"
 import { ResumeTemplate } from "@/components/template/resume-template"
@@ -16,17 +24,24 @@ import {
 } from "@/components/shared/notes-list"
 import { useAlignmentStore } from "@/store/alignment"
 import { reviseResume } from "@/lib/revise"
-import { AlignmentError } from "@/lib/align"
-import { loadApiKey } from "@/lib/storage"
-import type { Note } from "@/types/resume"
+import { alignResume, AlignmentError } from "@/lib/align"
+import {
+  loadApiKey,
+  loadOriginalResume,
+  updateSession,
+  getActiveSession,
+  getMRUSession,
+} from "@/lib/storage"
+import { resumeSchema, type Note } from "@/types/resume"
 
 export const Route = createFileRoute("/preview")({
   component: PreviewPage,
   beforeLoad: () => {
-    const { alignedResume } = useAlignmentStore.getState()
-    if (!alignedResume) {
-      throw redirect({ to: "/customize" })
-    }
+    const active = getActiveSession()
+    if (active && active.alignedResume) return
+    const mru = getMRUSession()
+    if (mru && mru.alignedResume) return
+    throw redirect({ to: "/customize" })
   },
 })
 
@@ -38,13 +53,18 @@ const STEPS = [
 
 function PreviewPage() {
   const navigate = useNavigate()
-  const alignedResume = useAlignmentStore((s) => s.alignedResume)
-  const notes = useAlignmentStore((s) => s.notes)
-  const jobPosting = useAlignmentStore((s) => s.jobPosting)
-  const setAlignment = useAlignmentStore((s) => s.setAlignment)
+  const {
+    activeSessionName,
+    alignedResume,
+    notes,
+    jobPosting,
+    setAlignment,
+  } = useAlignmentStore()
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<AlignmentError | null>(null)
+  const [realignOpen, setRealignOpen] = useState(false)
+  const [realignLoading, setRealignLoading] = useState(false)
 
   if (!alignedResume || !notes) {
     return (
@@ -73,10 +93,55 @@ function PreviewPage() {
         dismissedNotes: dismissed,
       })
       setAlignment(result.alignedResume, result.notes, jobPosting)
+      if (activeSessionName) {
+        updateSession(activeSessionName, {
+          alignedResume: result.alignedResume,
+          notes: result.notes,
+        })
+      }
     } catch (e) {
       setError(e as AlignmentError)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleRealign = async () => {
+    setError(null)
+    setRealignLoading(true)
+    const apiKey = loadApiKey()
+    const original = loadOriginalResume()
+    if (!original) {
+      setRealignLoading(false)
+      setRealignOpen(false)
+      navigate({ to: "/builder" })
+      return
+    }
+    const parsed = resumeSchema.safeParse(original)
+    if (!parsed.success) {
+      setRealignLoading(false)
+      setRealignOpen(false)
+      navigate({ to: "/builder" })
+      return
+    }
+    try {
+      const result = await alignResume({
+        apiKey,
+        resume: parsed.data,
+        jobPosting,
+      })
+      setAlignment(result.alignedResume, result.notes, jobPosting)
+      if (activeSessionName) {
+        updateSession(activeSessionName, {
+          alignedResume: result.alignedResume,
+          notes: result.notes,
+        })
+      }
+      setRealignOpen(false)
+    } catch (e) {
+      setError(e as AlignmentError)
+    } finally {
+      setRealignLoading(false)
     }
   }
 
@@ -94,14 +159,26 @@ function PreviewPage() {
         >
           ← Back to Customize
         </Button>
-        <Button
-          variant="outline"
-          onClick={() =>
-            downloadResumePdf(alignedResume, `${alignedResume.fullName}-aligned`)
-          }
-        >
-          Download Aligned CV
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setRealignOpen(true)}
+            disabled={realignLoading}
+          >
+            Re-align to original
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() =>
+              downloadResumePdf(
+                alignedResume,
+                `${alignedResume.fullName}-aligned`
+              )
+            }
+          >
+            Download Aligned CV
+          </Button>
+        </div>
       </div>
 
       <ResumeTemplate resume={alignedResume} />
@@ -140,6 +217,37 @@ function PreviewPage() {
           Re-align with a different posting →
         </Button>
       </div>
+
+      {/* Re-align confirm dialog */}
+      <Dialog open={realignOpen} onOpenChange={setRealignOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Re-align to original</DialogTitle>
+            <DialogDescription>
+              This will discard the current aligned CV and all revision work
+              for this session, then run a fresh Alignment against your current
+              input Resume and this session's Job Posting. This cannot be
+              undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRealignOpen(false)}
+              disabled={realignLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRealign}
+              disabled={realignLoading}
+            >
+              {realignLoading ? "Re-aligning…" : "Re-align"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

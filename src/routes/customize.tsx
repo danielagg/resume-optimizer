@@ -12,16 +12,23 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { StepIndicator } from "@/components/shared/step-indicator"
-import { loadApiKey, saveApiKey, loadResume } from "@/lib/storage"
+import {
+  loadApiKey,
+  saveApiKey,
+  loadOriginalResume,
+  createSession,
+  updateSession,
+  generateSessionName,
+} from "@/lib/storage"
 import { alignResume, AlignmentError } from "@/lib/align"
 import { useAlignmentStore } from "@/store/alignment"
-import { resumeSchema, type Resume } from "@/types/resume"
+import { resumeSchema } from "@/types/resume"
 
 export const Route = createFileRoute("/customize")({
   component: CustomizePage,
   beforeLoad: () => {
-    const stored = loadResume()
-    if (!stored) {
+    const original = loadOriginalResume()
+    if (!original) {
       throw redirect({ to: "/builder" })
     }
   },
@@ -35,15 +42,20 @@ const STEPS = [
 
 function CustomizePage() {
   const navigate = useNavigate()
-  const setAlignment = useAlignmentStore((s) => s.setAlignment)
+  const {
+    activeSessionName,
+    jobPosting: storeJobPosting,
+    setAlignment,
+    hydrateFromSession,
+  } = useAlignmentStore()
+
   const [apiKey, setApiKey] = useState(() => loadApiKey())
-  const [jobPosting, setJobPosting] = useState("")
+  const [jobPosting, setJobPosting] = useState(storeJobPosting ?? "")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<AlignmentError | null>(null)
 
-  const stored = loadResume()
-  const resume = stored as Resume
-  const parsed = resumeSchema.safeParse(resume)
+  const original = loadOriginalResume()
+  const parsed = original ? resumeSchema.safeParse(original) : null
 
   const handleAlign = async () => {
     setError(null)
@@ -62,7 +74,7 @@ function CustomizePage() {
       )
       return
     }
-    if (!parsed.success) {
+    if (!parsed || !parsed.success) {
       setError(
         new AlignmentError(
           "unknown",
@@ -71,14 +83,30 @@ function CustomizePage() {
       )
       return
     }
+
     setLoading(true)
     saveApiKey(apiKey)
+
     try {
       const result = await alignResume({
         apiKey,
         resume: parsed.data,
         jobPosting,
       })
+
+      let sessionName = activeSessionName
+      if (!sessionName) {
+        sessionName = generateSessionName()
+        const session = createSession(sessionName, jobPosting)
+        hydrateFromSession(session)
+      } else {
+        updateSession(sessionName, { jobPosting })
+      }
+      updateSession(sessionName, {
+        alignedResume: result.alignedResume,
+        notes: result.notes,
+      })
+
       setAlignment(result.alignedResume, result.notes, jobPosting)
       navigate({ to: "/preview" })
     } catch (e) {
