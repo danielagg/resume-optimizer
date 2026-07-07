@@ -20,6 +20,10 @@ _Avoid_: bio, summary, about-me
 The act of tailoring the Resume toward a specific Job Posting using an LLM. Produces an Aligned Resume plus Notes in a single response. The LLM may reorder sections and list items, rephrase content (wording only), and omit items it deems irrelevant — but may never substitute facts (e.g. degree names, numbers) or fabricate experience. Anything it wants to do but can't (e.g. suggest rewording a degree for a US audience, flag a gap) goes into Notes instead, where it surfaces to the user read-only.
 _Avoid_: matching, tailoring, optimizing
 
+**Revision**:
+A follow-up pass after the user has reviewed Notes, ticked specific points to address, and optionally written free-text responses. The Revision contract is looser than Alignment: the LLM may execute any change the user has explicitly green-lit, including fact substitutions it wasn't allowed to do unprompted (e.g. "change headline from Full Stack Dev to Tech Lead"), adding new content the user described in their response, or any other edit the user authorized — no hand-holding, no "are you sure." The LLM is the user's instrument, not their nanny. Produces a new Aligned Resume plus a new set of Notes. Revisions are an open loop — the user can run as many as they want until the LLM returns zero Notes.
+_Avoid_: re-run, retry, second pass
+
 **Job Posting**:
 The free-text job description the user pastes into the Customize page as the target for Alignment. Provider-agnostic — works with any source (LinkedIn, Indeed, a company careers page, an email forward).
 _Avoid_: listing, job ad, role
@@ -29,8 +33,12 @@ The Resume after Alignment — content rephrased or reordered to emphasize fit w
 _Avoid_: optimized CV, matched resume
 
 **Notes**:
-Free-text output from the LLM alongside the Aligned Resume — gaps, missing skills, and other pass-aware feedback to the user. Read-only in v1; no "act on" affordance.
+The list of Note items returned by the LLM alongside the Aligned Resume. Surfaced to the user on the Preview page — in v2, action-grade Notes can be ticked and addressed via a Revision pass; Info Notes are read-only awareness.
 _Avoid_: suggestions, tips, feedback
+
+**Note**:
+A single structured feedback item returned by the LLM alongside the Aligned Resume. Each Note has a severity (Critical, Important, Medium, Low, Info), free-text body, and an optional `suggestedFix` (a concrete proposed edit the LLM couldn't make during Alignment because it would violate the contract). Info-severity Notes have no `suggestedFix` and are pure awareness ("you have a 6-month gap — prepare an explanation"). In v2, action-grade Notes can be ticked by the user to address them, with an optional free-text response, then submitted via a Revision pass.
+_Avoid_: suggestion, tip, feedback item
 
 **Languages**:
 Human/spoken languages the user lists with a proficiency level (Basic, Advanced, Fluent, Native). One field inside the Resume. Programming languages belong to the `tech_stack` of individual work experiences, not here.

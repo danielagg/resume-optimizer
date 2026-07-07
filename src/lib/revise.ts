@@ -1,36 +1,31 @@
 import OpenAI from "openai"
 import {
   alignmentResponseSchema,
-  type AlignmentResponse,
+  type Note,
   type Resume,
 } from "@/types/resume"
-import alignmentPrompt from "@/prompts/alignment.md?raw"
+import revisionPrompt from "@/prompts/revision.md?raw"
+import {
+  AlignmentError,
+  type AlignmentErrorKind,
+  type AlignmentResult,
+} from "@/lib/align"
 
-export type AlignmentErrorKind =
-  | "invalid-api-key"
-  | "rate-limit"
-  | "schema-mismatch"
-  | "network"
-  | "refusal"
-  | "server"
-  | "unknown"
-
-export class AlignmentError extends Error {
-  kind: AlignmentErrorKind
-  constructor(kind: AlignmentErrorKind, message: string) {
-    super(message)
-    this.name = "AlignmentError"
-    this.kind = kind
-  }
+interface AddressedNote extends Note {
+  userResponse: string | null
 }
 
-export type AlignmentResult = AlignmentResponse
-
-export async function alignResume(args: {
+interface RevisionArgs {
   apiKey: string
-  resume: Resume
   jobPosting: string
-}): Promise<AlignmentResult> {
+  currentAlignedResume: Resume
+  addressedNotes: AddressedNote[]
+  dismissedNotes: Note[]
+}
+
+export async function reviseResume(
+  args: RevisionArgs
+): Promise<AlignmentResult> {
   let client: OpenAI
   try {
     client = new OpenAI({
@@ -41,19 +36,29 @@ export async function alignResume(args: {
     throw new AlignmentError("unknown", "Failed to initialize OpenAI client")
   }
 
+  const userMessage = JSON.stringify({
+    jobPosting: args.jobPosting,
+    currentAlignedResume: args.currentAlignedResume,
+    addressedNotes: args.addressedNotes.map((n) => ({
+      severity: n.severity,
+      text: n.text,
+      suggestedFix: n.suggestedFix ?? null,
+      userResponse: n.userResponse,
+    })),
+    dismissedNotes: args.dismissedNotes.map((n) => ({
+      severity: n.severity,
+      text: n.text,
+      suggestedFix: n.suggestedFix ?? null,
+    })),
+  })
+
   let completion
   try {
     completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: alignmentPrompt },
-        {
-          role: "user",
-          content: JSON.stringify({
-            resume: args.resume,
-            job_posting: args.jobPosting,
-          }),
-        },
+        { role: "system", content: revisionPrompt },
+        { role: "user", content: userMessage },
       ],
       response_format: { type: "json_object" },
     })
@@ -122,3 +127,5 @@ export async function alignResume(args: {
 
   return validation.data
 }
+
+export { type AddressedNote, type AlignmentErrorKind }

@@ -57,9 +57,25 @@ export const resumeSchema = z.object({
 })
 export type Resume = z.infer<typeof resumeSchema>
 
+export const severities = [
+  "Critical",
+  "Important",
+  "Medium",
+  "Low",
+  "Info",
+] as const
+export type Severity = (typeof severities)[number]
+
+export const noteSchema = z.object({
+  severity: z.enum(severities),
+  text: z.string().min(1),
+  suggestedFix: z.string().optional(),
+})
+export type Note = z.infer<typeof noteSchema>
+
 export const alignmentResponseSchema = z.object({
   alignedResume: resumeSchema,
-  notes: z.string(),
+  notes: z.array(noteSchema),
 })
 export type AlignmentResponse = z.infer<typeof alignmentResponseSchema>
 

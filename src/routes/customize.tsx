@@ -79,7 +79,7 @@ function CustomizePage() {
         resume: parsed.data,
         jobPosting,
       })
-      setAlignment(result.alignedResume, result.notes)
+      setAlignment(result.alignedResume, result.notes, jobPosting)
       navigate({ to: "/preview" })
     } catch (e) {
       setError(e as AlignmentError)

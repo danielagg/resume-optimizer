@@ -1,3 +1,4 @@
+import { useState } from "react"
 import {
   createFileRoute,
   Link,
@@ -5,18 +6,25 @@ import {
   redirect,
 } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { StepIndicator } from "@/components/shared/step-indicator"
 import { ResumeTemplate } from "@/components/template/resume-template"
 import { downloadResumePdf } from "@/components/template/download-pdf"
+import {
+  NotesList,
+  type AddressedNote,
+} from "@/components/shared/notes-list"
 import { useAlignmentStore } from "@/store/alignment"
+import { reviseResume } from "@/lib/revise"
+import { AlignmentError } from "@/lib/align"
+import { loadApiKey } from "@/lib/storage"
+import type { Note } from "@/types/resume"
 
 export const Route = createFileRoute("/preview")({
   component: PreviewPage,
   beforeLoad: () => {
-    const aligned = useAlignmentStore.getState().alignedResume
-    if (!aligned) {
+    const { alignedResume } = useAlignmentStore.getState()
+    if (!alignedResume) {
       throw redirect({ to: "/customize" })
     }
   },
@@ -32,13 +40,44 @@ function PreviewPage() {
   const navigate = useNavigate()
   const alignedResume = useAlignmentStore((s) => s.alignedResume)
   const notes = useAlignmentStore((s) => s.notes)
+  const jobPosting = useAlignmentStore((s) => s.jobPosting)
+  const setAlignment = useAlignmentStore((s) => s.setAlignment)
+
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<AlignmentError | null>(null)
 
   if (!alignedResume || !notes) {
     return (
       <main className="mx-auto max-w-3xl px-4 py-8">
-        <RedirectHint />
+        <p className="text-sm text-muted-foreground">
+          No alignment yet —{" "}
+          <Link to="/customize" className="underline hover:text-foreground">
+            go to Customize
+          </Link>
+          .
+        </p>
       </main>
     )
+  }
+
+  const handleRevise = async (addressed: AddressedNote[], dismissed: Note[]) => {
+    setError(null)
+    setLoading(true)
+    const apiKey = loadApiKey()
+    try {
+      const result = await reviseResume({
+        apiKey,
+        jobPosting,
+        currentAlignedResume: alignedResume,
+        addressedNotes: addressed,
+        dismissedNotes: dismissed,
+      })
+      setAlignment(result.alignedResume, result.notes, jobPosting)
+    } catch (e) {
+      setError(e as AlignmentError)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -67,26 +106,25 @@ function PreviewPage() {
 
       <ResumeTemplate resume={alignedResume} />
 
-      {notes && (
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Notes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Alert>
-              <AlertTitle>Read-only feedback from the LLM</AlertTitle>
-              <AlertDescription>
-                <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed">
-                  {notes}
-                </pre>
-              </AlertDescription>
-            </Alert>
-            <p className="mt-4 text-xs text-muted-foreground">
-              No "act on" affordance in v1 — these are FYI only.
+      <div className="mt-8 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium">Notes</h2>
+          {notes.length > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Tick the ones you want to address, then Revise.
             </p>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertTitle>Revision failed</AlertTitle>
+            <AlertDescription>{error.message}</AlertDescription>
+          </Alert>
+        )}
+
+        <NotesList notes={notes} onRevise={handleRevise} loading={loading} />
+      </div>
 
       <div className="mt-8 flex justify-between">
         <Link
@@ -95,23 +133,13 @@ function PreviewPage() {
         >
           ← Back to Builder
         </Link>
-        <Button variant="outline" onClick={() => navigate({ to: "/customize" })}>
+        <Button
+          variant="outline"
+          onClick={() => navigate({ to: "/customize" })}
+        >
           Re-align with a different posting →
         </Button>
       </div>
     </main>
-  )
-}
-
-function RedirectHint() {
-  return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        No alignment yet — redirecting you to Customize…
-      </p>
-      <Button onClick={() => (window.location.href = "/customize")}>
-        Go to Customize manually
-      </Button>
-    </div>
   )
 }

@@ -14,7 +14,7 @@ You will receive a JSON object with two fields:
 Produce two outputs in a single JSON response:
 
 1. `alignedResume` — a reworked version of the input `resume`, structured exactly the same way (same fields, same types)
-2. `notes` — a free-text string surfacing gaps, suggested substitutions, and other pass-aware feedback
+2. `notes` — an array of structured Note objects surfacing gaps, suggested substitutions, and other pass-aware feedback
 
 ## Alignment contract — what you MAY do
 
@@ -32,15 +32,30 @@ Produce two outputs in a single JSON response:
 
 ## Notes field — what goes in it
 
-Anything you wanted to do during alignment but couldn't, because it would violate the contract above. Examples:
+Anything you wanted to do during alignment but couldn't, because it would violate the contract above. Each Note is a structured object:
 
-- "Consider changing your headline to 'X' — the Job Posting emphasizes Y"
-- "Your degree name 'BSc in Business IT' might be more recognizable as 'BS in Information Systems' for US audiences — worth checking"
-- "The Job Posting requires Kubernetes, which is missing from your tech stacks — do you have any exposure?"
-- "You have a 6-month gap between two roles — prepare an explanation if asked"
-- "Your profile is shorter than typical for this seniority — consider adding 1-2 sentences"
+- `severity`: one of `"Critical"`, `"Important"`, `"Medium"`, `"Low"`, `"Info"`
+- `text`: the feedback itself, honest and specific
+- `suggestedFix` (optional): a concrete proposed edit you would have made but couldn't. Omit for pure awareness Notes that have no Resume edit to propose.
 
-Notes must be honest, specific, and actionable. No filler. If you have nothing to surface, write an empty string.
+### Severity guidelines
+
+- **Critical** — a hard blocker in the Job Posting the candidate is missing entirely (e.g. missing a mandatory skill)
+- **Important** — a significant gap or mismatch that will likely cost the candidate an interview
+- **Medium** — a worthwhile improvement that would strengthen the application
+- **Low** — a minor polish item
+- **Info** — pure awareness feedback with no Resume edit to make (e.g. "you have a 6-month gap — prepare an explanation if asked"). Info Notes should never include `suggestedFix`.
+
+### Examples
+
+- Critical, text: "The Job Posting requires Kubernetes, which is missing from all your tech stacks.", suggestedFix: "Add 'Kubernetes' to the tech_stack of your ACME Corp role if you have exposure."
+- Important, text: "Your headline 'Full Stack Developer' undersells you for this Senior Platform Engineer posting.", suggestedFix: "Change headline to 'Senior Platform Engineer' if you're comfortable with that positioning."
+- Info, text: "You have a 6-month gap between two roles — prepare an explanation if asked."
+- Low, text: "Your profile is shorter than typical for this seniority.", suggestedFix: "Add 1-2 sentences to your profile highlighting your systems-design experience."
+
+### Empty Notes
+
+If you have nothing to surface, return an empty array. The list must always be present (never null), even if empty.
 
 ## Output format
 
@@ -80,8 +95,14 @@ Return a single JSON object matching this shape exactly:
     "otherAchievements": [{ "name": "...", "date": "..." or null }],
     "languages": [{ "name": "...", "level": "Basic" | "Advanced" | "Fluent" | "Native" }]
   },
-  "notes": "..."
+  "notes": [
+    {
+      "severity": "Critical" | "Important" | "Medium" | "Low" | "Info",
+      "text": "...",
+      "suggestedFix": "..."
+    }
+  ]
 }
 ```
 
-Preserve contact details verbatim. Preserve date strings verbatim. Never null out required fields. Never add fields that aren't in the schema.
+`suggestedFix` is optional — omit it for Info Notes or when there's no concrete edit to suggest. Preserve contact details verbatim. Preserve date strings verbatim. Never null out required fields. Never add fields that aren't in the schema.
