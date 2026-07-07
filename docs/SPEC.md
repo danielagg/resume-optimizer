@@ -108,7 +108,7 @@ Reused for both passes — the call site (`alignResume()` vs `reviseResume()`) d
 ## Routing
 
 - `/` Home — landing page, "Get Started" always → `/builder`
-- `/builder` Builder — long scrollable form, shadcn Card per section. Pre-populated from localStorage (no skip). Bottom CTA: "Continue to Customize →" (validator blocks if required fields missing). Also has "Download CV" button.
+- `/builder` Builder — long scrollable form, shadcn Card per section. Pre-populated from localStorage (no skip). Bottom CTA: "Continue to Customize →" (validator blocks if required fields missing). Also has "Download CV as is" button.
 - `/customize` Customize — paste Job Posting + OpenAI API key (both persist). "Align my CV" button → OpenAI call (Alignment contract). Inline shadcn Alert for errors, distinct per failure mode (401/429/schema/network/refusal). On success → set Zustand, navigate to `/preview`.
 - `/preview` Preview — renders Aligned Resume via Template. Interactive Notes section (see below). "Download Aligned CV" button. "Back to Customize" link. Direct navigation with no Aligned Resume in store → redirect to `/customize`.
 
@@ -171,7 +171,7 @@ Reused for both passes — the call site (`alignResume()` vs `reviseResume()`) d
 ## Preview & PDF
 
 - Template renders the Resume (aligned or not) for on-screen preview (HTML/Tailwind) and PDF export (`@react-pdf/renderer` — separate React tree with `@react-pdf` primitives; one `Resume` type, two render paths).
-- Builder has "Download CV" → exports the plain Resume.
+- Builder has "Download CV as is" → exports the plain Resume.
 - Preview has "Download Aligned CV" → exports the Aligned Resume.
 
 ## Tech Stack

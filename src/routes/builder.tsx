@@ -15,7 +15,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Trash2, Plus } from "lucide-react"
 import { StepIndicator } from "@/components/shared/step-indicator"
-import { ResumeTemplate } from "@/components/template/resume-template"
 import { downloadResumePdf } from "@/components/template/download-pdf"
 import { loadOriginalResume, saveOriginalResume } from "@/lib/storage"
 import {
@@ -38,7 +37,9 @@ const STEPS = [
 
 function BuilderPage() {
   const navigate = useNavigate()
-  const [resume, setResume] = useState<Resume>(() => loadOriginalResume() ?? emptyResume())
+  const [resume, setResume] = useState<Resume>(
+    () => loadOriginalResume() ?? emptyResume()
+  )
   const [submitted, setSubmitted] = useState(false)
 
   const errors = useMemo<Record<string, string>>(() => {
@@ -78,145 +79,140 @@ function BuilderPage() {
       <div className="mb-8 flex justify-center">
         <StepIndicator steps={STEPS} currentIndex={0} />
       </div>
+      <div>
+        {Object.keys(errors).length > 0 && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertDescription>
+              Please fix the highlighted fields before continuing.
+            </AlertDescription>
+          </Alert>
+        )}
 
-      {Object.keys(errors).length > 0 && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>
-            Please fix the highlighted fields before continuing.
-          </AlertDescription>
-        </Alert>
-      )}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal details</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <Field label="Full name" error={errors["fullName"]}>
+                <Input
+                  value={resume.fullName}
+                  onChange={(e) => update("fullName", e.target.value)}
+                />
+              </Field>
+              <Field label="Headline" error={errors["headline"]}>
+                <Input
+                  value={resume.headline}
+                  onChange={(e) => update("headline", e.target.value)}
+                />
+              </Field>
+              <Field label="Location">
+                <Input
+                  value={resume.location}
+                  onChange={(e) => update("location", e.target.value)}
+                />
+              </Field>
+              <Field label="Email" error={errors["email"]}>
+                <Input
+                  type="email"
+                  value={resume.email}
+                  onChange={(e) => update("email", e.target.value)}
+                />
+              </Field>
+              <Field label="Phone (optional)">
+                <Input
+                  value={resume.phone ?? ""}
+                  onChange={(e) => update("phone", e.target.value || null)}
+                />
+              </Field>
+              <div className="sm:col-span-2">
+                <SocialsEditor
+                  socials={resume.socials}
+                  onChange={(socials) => update("socials", socials)}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal details</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <Field label="Full name" error={errors["fullName"]}>
-              <Input
-                value={resume.fullName}
-                onChange={(e) => update("fullName", e.target.value)}
-              />
-            </Field>
-            <Field label="Headline" error={errors["headline"]}>
-              <Input
-                value={resume.headline}
-                onChange={(e) => update("headline", e.target.value)}
-              />
-            </Field>
-            <Field label="Location">
-              <Input
-                value={resume.location}
-                onChange={(e) => update("location", e.target.value)}
-              />
-            </Field>
-            <Field label="Email" error={errors["email"]}>
-              <Input
-                type="email"
-                value={resume.email}
-                onChange={(e) => update("email", e.target.value)}
-              />
-            </Field>
-            <Field label="Phone (optional)">
-              <Input
-                value={resume.phone ?? ""}
-                onChange={(e) => update("phone", e.target.value || null)}
-              />
-            </Field>
-            <div className="sm:col-span-2">
-              <SocialsEditor
-                socials={resume.socials}
-                onChange={(socials) => update("socials", socials)}
-              />
-            </div>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Field
+                label="Short description of who you are"
+                error={errors["profile"]}
+              >
+                <Textarea
+                  rows={4}
+                  value={resume.profile}
+                  onChange={(e) => update("profile", e.target.value)}
+                />
+              </Field>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Field label="Short description of who you are" error={errors["profile"]}>
-              <Textarea
-                rows={4}
-                value={resume.profile}
-                onChange={(e) => update("profile", e.target.value)}
-              />
-            </Field>
-          </CardContent>
-        </Card>
-
-        <WorkExperienceEditor
-          workExperience={resume.workExperience}
-          onChange={(workExperience) => update("workExperience", workExperience)}
-          errorPrefix="workExperience"
-        />
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Education (optional)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EducationEditor
-              education={resume.education}
-              onChange={(education) => update("education", education)}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Other achievements (optional)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AchievementsEditor
-              achievements={resume.otherAchievements}
-              onChange={(otherAchievements) =>
-                update("otherAchievements", otherAchievements)
-              }
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Languages (optional)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LanguagesEditor
-              languages={resume.languages}
-              onChange={(languages) => update("languages", languages)}
-            />
-          </CardContent>
-        </Card>
-
-        <div className="flex items-center justify-between gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() =>
-              downloadResumePdf(resume, resume.fullName || "resume")
+          <WorkExperienceEditor
+            workExperience={resume.workExperience}
+            onChange={(workExperience) =>
+              update("workExperience", workExperience)
             }
-          >
-            Download CV
-          </Button>
-          <Button type="button" size="lg" onClick={handleSubmit}>
-            Continue to Customize →
-          </Button>
-        </div>
-      </div>
+            errorPrefix="workExperience"
+          />
 
-      <div className="mt-16 border-t border-border/50 pt-10">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-border/30" />
-          <h2 className="text-xs font-medium tracking-wide text-muted-foreground">
-            Live preview
-          </h2>
-          <div className="h-px flex-1 bg-border/30" />
+          <Card>
+            <CardHeader>
+              <CardTitle>Education (optional)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <EducationEditor
+                education={resume.education}
+                onChange={(education) => update("education", education)}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Other achievements (optional)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AchievementsEditor
+                achievements={resume.otherAchievements}
+                onChange={(otherAchievements) =>
+                  update("otherAchievements", otherAchievements)
+                }
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Languages (optional)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LanguagesEditor
+                languages={resume.languages}
+                onChange={(languages) => update("languages", languages)}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="flex items-center justify-between gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                downloadResumePdf(resume, resume.fullName || "resume")
+              }
+            >
+              Download CV as is
+            </Button>
+            <Button type="button" size="lg" onClick={handleSubmit}>
+              Continue to Customize →
+            </Button>
+          </div>
         </div>
-        <ResumeTemplate resume={resume} />
       </div>
     </main>
   )
@@ -326,7 +322,9 @@ function WorkExperienceEditor({
                 variant="ghost"
                 size="icon"
                 disabled={workExperience.length <= 1}
-                onClick={() => onChange(workExperience.filter((_, j) => j !== i))}
+                onClick={() =>
+                  onChange(workExperience.filter((_, j) => j !== i))
+                }
               >
                 <Trash2 className="size-4" />
               </Button>
@@ -590,7 +588,10 @@ function EducationEditor({
         variant="outline"
         size="sm"
         onClick={() =>
-          onChange([...education, { degree: "", university: "", from: "", to: null }])
+          onChange([
+            ...education,
+            { degree: "", university: "", from: "", to: null },
+          ])
         }
       >
         <Plus className="mr-1 size-3" /> Add education
