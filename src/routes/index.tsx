@@ -2,16 +2,28 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { getMRUSession } from "@/lib/storage"
 import { ThemeToggle } from "@/components/shared/theme-toggle"
-import { ArrowRight, FileText, PenLine, Sparkles } from "lucide-react"
+import {
+  ArrowRight,
+  Check,
+  FileText,
+  LockKeyhole,
+  PenLine,
+  Sparkles,
+  Target,
+} from "lucide-react"
 
 export const Route = createFileRoute("/")({
   component: HomePage,
 })
 
 const steps = [
-  { icon: FileText, label: "Your CV", desc: "Enter your experience" },
-  { icon: PenLine, label: "Job posting", desc: "Paste the description" },
-  { icon: Sparkles, label: "Aligned", desc: "Get a tailored version" },
+  {
+    icon: FileText,
+    label: "Build your base",
+    desc: "Add your experience once.",
+  },
+  { icon: PenLine, label: "Set the target", desc: "Paste any job posting." },
+  { icon: Sparkles, label: "Refine the fit", desc: "Review, revise, export." },
 ]
 
 function HomePage() {
@@ -29,103 +41,197 @@ function HomePage() {
   }
 
   return (
-    <main
-      className="relative flex min-h-svh flex-col items-center overflow-hidden px-6"
-      style={{
-        backgroundImage: `
-          radial-gradient(ellipse at 20% 20%, oklch(from var(--primary) l c h / 0.35) 0%, transparent 45%),
-          radial-gradient(ellipse at 80% 80%, oklch(from var(--accent) l c h / 0.3) 0%, transparent 45%),
-          radial-gradient(ellipse at 50% 0%, oklch(from var(--primary) l c h / 0.08) 0%, transparent 60%)
-        `,
-      }}
-    >
-      {/* Geometric rings — top-left */}
-      <div className="pointer-events-none absolute top-8 left-8 h-[400px] w-[400px] opacity-40 dark:opacity-50">
-        <svg viewBox="0 0 400 400" fill="none" className="h-full w-full text-primary/70">
-          <circle cx="200" cy="200" r="180" stroke="currentColor" strokeWidth="0.5" />
-          <circle cx="200" cy="200" r="120" stroke="currentColor" strokeWidth="0.5" />
-          <circle cx="200" cy="200" r="60" stroke="currentColor" strokeWidth="0.5" />
-          <line x1="20" y1="200" x2="380" y2="200" stroke="currentColor" strokeWidth="0.5" />
-          <line x1="200" y1="20" x2="200" y2="380" stroke="currentColor" strokeWidth="0.5" />
-        </svg>
-      </div>
+    <main className="relative min-h-svh overflow-hidden">
+      <div className="app-grid pointer-events-none absolute inset-0 opacity-70" />
+      <div className="pointer-events-none absolute -top-40 right-[-12rem] size-[42rem] rounded-full bg-accent/25 blur-[100px]" />
+      <div className="pointer-events-none absolute top-[32rem] -left-64 size-[34rem] rounded-full bg-primary/10 blur-[110px]" />
 
-      {/* Hexagons — bottom-right */}
-      <div className="pointer-events-none absolute bottom-16 right-16 h-[280px] w-[280px] opacity-35 dark:opacity-45">
-        <svg viewBox="0 0 100 100" fill="none" className="h-full w-full text-primary/70">
-          <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" stroke="currentColor" strokeWidth="0.5" />
-          <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="currentColor" strokeWidth="0.5" />
-          <polygon points="50,32 68,41 68,59 50,68 32,59 32,41" stroke="currentColor" strokeWidth="0.5" />
-        </svg>
-      </div>
-
-      {/* Extra accent — floating dots */}
-      <div className="pointer-events-none absolute top-1/3 right-1/4 h-2 w-2 rounded-full bg-primary/30 dark:bg-primary/40" />
-      <div className="pointer-events-none absolute bottom-1/3 left-1/4 h-3 w-3 rounded-full bg-amber-400/25 dark:bg-amber-400/35" />
-      <div className="pointer-events-none absolute top-1/4 left-1/2 h-1.5 w-1.5 rounded-full bg-primary/20 dark:bg-primary/30" />
-
-      {/* Theme toggle */}
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
-
-      {/* Content */}
-      <div className="flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-16 py-20 text-center">
-        {/* Heading */}
-        <div className="space-y-6">
-          <h1 className="text-5xl font-bold leading-tight tracking-tight sm:text-6xl">
-            <span className="text-balance">
-              Tailor your CV{" "}
-              <span className="text-primary">to any job</span>
-            </span>
-          </h1>
-          <p className="mx-auto max-w-lg text-balance text-lg leading-relaxed text-muted-foreground">
-            Drop in your CV, paste a job description, and get a version written
-            to match — with zero sign-up.
-          </p>
-        </div>
-
-        {/* CTA */}
-        <div className="flex flex-col items-center gap-4">
-          <Button size="lg" onClick={handleGetStarted} className="gap-1.5 px-8 py-6 text-base">
-            Get started
-            <ArrowRight className="size-4" />
-          </Button>
-        </div>
-
-        {/* API key notice */}
-        <div className="flex items-center gap-2 rounded-lg border border-amber-400/20 bg-amber-400/5 px-4 py-2.5">
-          <span className="rounded-md bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-amber-600 dark:text-amber-400">
-            BYOK
+      <header className="relative z-20 mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
+        <a
+          href="/"
+          className="group flex items-center gap-2.5 text-sm font-semibold tracking-[-0.02em]"
+        >
+          <div className="relative flex size-9 items-center justify-center rounded-xl bg-foreground text-background shadow-sm transition-transform group-hover:-rotate-3">
+            <FileText className="size-4" />
+            <Sparkles className="absolute -top-1 -right-1 size-3.5 rounded-full bg-accent p-0.5 text-accent-foreground" />
+          </div>
+          Resume Optimizer
+        </a>
+        <div className="flex items-center gap-3">
+          <span className="hidden font-mono text-[0.65rem] tracking-[0.14em] text-muted-foreground uppercase sm:block">
+            Private by design
           </span>
-          <p className="text-xs text-muted-foreground">
-            Bring your own OpenAI key — the app routes directly to OpenAI.
-            Nothing stored server-side.
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <section className="relative z-10 mx-auto grid max-w-7xl items-center gap-14 px-5 pt-14 pb-20 sm:px-8 sm:pt-20 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20 lg:pt-24 lg:pb-28">
+        <div className="max-w-2xl">
+          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-card/70 px-3 py-1.5 shadow-sm backdrop-blur-xl">
+            <span className="flex size-5 items-center justify-center rounded-full bg-accent text-accent-foreground">
+              <Target className="size-3" />
+            </span>
+            <span className="eyebrow">Built for the shortlist</span>
+          </div>
+          <h1 className="text-[clamp(3.25rem,7vw,6.7rem)] leading-[0.93] font-semibold tracking-[-0.065em] text-balance">
+            Your story,
+            <span className="mt-1 block text-primary">better aligned.</span>
+          </h1>
+          <p className="mt-8 max-w-xl text-lg leading-8 text-balance text-muted-foreground sm:text-xl">
+            Turn one solid CV into a sharp, role-specific application — without
+            sanding away the voice that makes it yours.
           </p>
+          <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <Button
+              size="lg"
+              onClick={handleGetStarted}
+              className="h-13 gap-2 px-7 text-base"
+            >
+              Optimize my CV
+              <ArrowRight className="size-4 transition-transform group-hover/button:translate-x-1" />
+            </Button>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <LockKeyhole className="size-4 text-primary" />
+              No account. No server storage.
+            </div>
+          </div>
+          <div className="mt-9 flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-muted-foreground">
+            {[
+              "Guided improvements",
+              "PDF-ready output",
+              "You stay in control",
+            ].map((item) => (
+              <span key={item} className="flex items-center gap-1.5">
+                <Check className="size-3.5 text-primary" /> {item}
+              </span>
+            ))}
+          </div>
         </div>
 
-        {/* Process steps card */}
-        <div className="flex items-center gap-0 rounded-2xl border border-border/50 bg-background/60 px-8 py-5 backdrop-blur-sm">
-          {steps.map((step, idx) => (
-            <div key={step.label} className="flex items-center">
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
-                  <step.icon className="size-4 text-primary" />
+        <div className="relative mx-auto w-full max-w-[660px] lg:mx-0">
+          <div className="absolute -inset-5 -z-10 rotate-2 rounded-[2.25rem] bg-accent/35" />
+          <div className="surface-shadow overflow-hidden rounded-[1.75rem] border border-border/70 bg-card/95 backdrop-blur-xl">
+            <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
+              <div className="flex items-center gap-2">
+                <span className="size-2 rounded-full bg-primary" />
+                <span className="font-mono text-[0.68rem] font-semibold tracking-[0.14em] uppercase">
+                  Alignment report
+                </span>
+              </div>
+              <span className="rounded-full bg-accent/50 px-2.5 py-1 font-mono text-[0.62rem] font-semibold tracking-wider text-accent-foreground uppercase">
+                Ready to refine
+              </span>
+            </div>
+            <div className="grid gap-0 sm:grid-cols-[1.2fr_0.8fr]">
+              <div className="border-b border-border/60 p-6 sm:border-r sm:border-b-0 sm:p-8">
+                <div className="flex items-center gap-4">
+                  <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                    <FileText className="size-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Senior Product Designer</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Amsterdam · Product Studio
+                    </p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium">{step.label}</p>
-                  <p className="text-xs text-muted-foreground">{step.desc}</p>
+                <div className="mt-7 space-y-3">
+                  <div className="h-2 w-2/3 rounded-full bg-foreground/80" />
+                  <div className="h-1.5 w-full rounded-full bg-muted" />
+                  <div className="h-1.5 w-[92%] rounded-full bg-muted" />
+                  <div className="h-1.5 w-[76%] rounded-full bg-muted" />
+                </div>
+                <div className="mt-7 space-y-4">
+                  {[78, 93, 64].map((width, index) => (
+                    <div
+                      key={width}
+                      className="rounded-xl border border-border/60 bg-background/50 p-3.5"
+                    >
+                      <div className="mb-2 flex items-center justify-between">
+                        <div className="h-1.5 w-24 rounded-full bg-foreground/70" />
+                        <span className="font-mono text-[0.6rem] text-muted-foreground">
+                          0{index + 1}
+                        </span>
+                      </div>
+                      <div
+                        className="h-1.5 rounded-full bg-primary/25"
+                        style={{ width: `${width}%` }}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
-              {idx < steps.length - 1 && (
-                <div className="mx-5 text-muted-foreground/30">
-                  <ArrowRight className="size-4" />
+              <div className="bg-muted/35 p-6 sm:p-8">
+                <p className="eyebrow">Signal check</p>
+                <div className="mt-5 flex items-end gap-2">
+                  <span className="text-5xl font-semibold tracking-[-0.06em]">
+                    86
+                  </span>
+                  <span className="mb-1 text-sm text-muted-foreground">
+                    / 100
+                  </span>
                 </div>
-              )}
+                <div className="mt-5 h-2 overflow-hidden rounded-full bg-border/70">
+                  <div className="h-full w-[86%] rounded-full bg-primary" />
+                </div>
+                <div className="mt-8 space-y-3">
+                  {[
+                    "Role language aligned",
+                    "Impact made clearer",
+                    "Two details to review",
+                  ].map((item, index) => (
+                    <div
+                      key={item}
+                      className="flex items-start gap-2.5 text-xs leading-5"
+                    >
+                      <span
+                        className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full ${index === 2 ? "bg-accent/60 text-accent-foreground" : "bg-primary/12 text-primary"}`}
+                      >
+                        {index === 2 ? (
+                          <Sparkles className="size-2.5" />
+                        ) : (
+                          <Check className="size-2.5" />
+                        )}
+                      </span>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="absolute -right-3 -bottom-6 hidden rotate-2 rounded-xl border border-border/60 bg-foreground px-4 py-3 text-background shadow-xl sm:block">
+            <p className="font-mono text-[0.62rem] tracking-wider text-background/60 uppercase">
+              Your CV, upgraded
+            </p>
+            <p className="mt-1 text-sm font-medium">Still unmistakably you.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative z-10 border-t border-border/60 bg-card/55">
+        <div className="mx-auto grid max-w-7xl gap-0 px-5 py-5 sm:px-8 md:grid-cols-3">
+          {steps.map((step, idx) => (
+            <div
+              key={step.label}
+              className="group flex items-start gap-4 border-border/60 px-2 py-5 md:border-r md:px-7 md:last:border-r-0"
+            >
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/8 text-primary transition-transform group-hover:-rotate-3">
+                <step.icon className="size-4.5" />
+              </div>
+              <div>
+                <p className="mb-1 font-mono text-[0.62rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                  0{idx + 1}
+                </p>
+                <p className="text-sm font-semibold">{step.label}</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {step.desc}
+                </p>
+              </div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
     </main>
   )
 }

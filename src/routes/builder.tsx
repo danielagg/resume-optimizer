@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Trash2, Plus } from "lucide-react"
+import { ArrowRight, Download, Plus, Trash2 } from "lucide-react"
 import { StepIndicator } from "@/components/shared/step-indicator"
 import { downloadResumePdf } from "@/components/template/download-pdf"
 import { loadOriginalResume, saveOriginalResume } from "@/lib/storage"
@@ -75,11 +75,19 @@ function BuilderPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      <div className="mb-8 flex justify-center">
+    <main className="page-wrap">
+      <div className="mb-10 grid items-end gap-6 border-b border-border/60 pb-8 lg:grid-cols-[1fr_auto]">
+        <div className="max-w-2xl">
+          <p className="eyebrow mb-3">Your source of truth</p>
+          <h1 className="page-title">Build your base CV</h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+            Add the full picture once. We’ll use it as the foundation for every
+            tailored version you create.
+          </p>
+        </div>
         <StepIndicator steps={STEPS} currentIndex={0} />
       </div>
-      <div>
+      <div className="mx-auto max-w-4xl">
         {Object.keys(errors).length > 0 && (
           <Alert variant="destructive" className="mb-6">
             <AlertDescription>
@@ -198,7 +206,7 @@ function BuilderPage() {
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="sticky bottom-4 z-20 flex flex-col-reverse items-stretch justify-between gap-3 rounded-2xl border border-border/70 bg-background/88 p-3 shadow-xl backdrop-blur-xl sm:flex-row sm:items-center">
             <Button
               type="button"
               variant="outline"
@@ -206,10 +214,12 @@ function BuilderPage() {
                 downloadResumePdf(resume, resume.fullName || "resume")
               }
             >
+              <Download className="size-4" />
               Download CV as is
             </Button>
             <Button type="button" size="lg" onClick={handleSubmit}>
-              Continue to Customize →
+              Continue to customize
+              <ArrowRight className="size-4 transition-transform group-hover/button:translate-x-1" />
             </Button>
           </div>
         </div>
@@ -314,7 +324,10 @@ function WorkExperienceEditor({
       </CardHeader>
       <CardContent className="space-y-6">
         {workExperience.map((exp, i) => (
-          <div key={i} className="rounded-md border p-4">
+          <div
+            key={i}
+            className="rounded-2xl border border-border/70 bg-muted/25 p-4 sm:p-5"
+          >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-medium">Experience {i + 1}</h3>
               <Button
@@ -524,7 +537,10 @@ function EducationEditor({
   return (
     <div className="space-y-4">
       {education.map((edu, i) => (
-        <div key={i} className="rounded-md border p-4">
+        <div
+          key={i}
+          className="rounded-2xl border border-border/70 bg-muted/25 p-4 sm:p-5"
+        >
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-medium">Education {i + 1}</h3>
             <Button

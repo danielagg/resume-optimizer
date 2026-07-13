@@ -34,9 +34,12 @@ export function NotesList({
 
   if (notes.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center">
-          <p className="text-sm font-medium">No further notes</p>
+      <Card className="border-primary/15 bg-primary/5 shadow-none">
+        <CardContent className="py-10 text-center">
+          <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-full bg-primary/12 text-lg text-primary">
+            ✓
+          </div>
+          <p className="text-sm font-semibold">No further notes</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Your CV is ready — download it below.
           </p>
@@ -94,11 +97,13 @@ export function NotesList({
           <Card
             key={idx}
             className={cn(
-              "transition-colors",
-              isTicked && "border-primary/50 bg-primary/5"
+              "shadow-none transition-all duration-200",
+              !isInfo && "hover:border-primary/25",
+              isTicked &&
+                "border-primary/40 bg-primary/6 shadow-[0_10px_30px_color-mix(in_oklch,var(--primary)_8%,transparent)]"
             )}
           >
-            <CardContent className="space-y-2 py-4">
+            <CardContent className="space-y-2 py-4.5">
               <div className="flex items-start gap-3">
                 {!isInfo && (
                   <Checkbox
@@ -111,10 +116,12 @@ export function NotesList({
                   <div className="flex items-center gap-2">
                     <SeverityBadge severity={note.severity} />
                   </div>
-                  <p className="text-sm leading-relaxed">{note.text}</p>
+                  <p className="text-sm leading-6">{note.text}</p>
                   {note.suggestedFix && (
-                    <p className="rounded-sm bg-muted px-2 py-1.5 text-xs text-muted-foreground">
-                      <span className="font-medium">LLM suggests:</span>{" "}
+                    <p className="rounded-xl border border-border/50 bg-muted/60 px-3 py-2.5 text-xs leading-5 text-muted-foreground">
+                      <span className="font-semibold text-foreground">
+                        Suggested direction:
+                      </span>{" "}
                       {note.suggestedFix}
                     </p>
                   )}
@@ -134,10 +141,12 @@ export function NotesList({
         )
       })}
 
-      <div className="flex justify-end pt-2">
+      <div className="pt-2">
         <Button
           onClick={handleRevise}
           disabled={tickedCount === 0 || loading}
+          className="w-full"
+          size="lg"
         >
           {loading
             ? "Revising…"

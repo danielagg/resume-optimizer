@@ -12,7 +12,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-xl bg-card py-(--card-spacing) text-sm text-card-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10 [--card-spacing:--spacing(8)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(5)] *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        "group/card flex flex-col gap-(--card-spacing) overflow-hidden rounded-2xl border border-border/70 bg-card/95 py-(--card-spacing) text-sm text-card-foreground shadow-[0_1px_2px_color-mix(in_oklch,var(--foreground)_4%,transparent),0_18px_50px_color-mix(in_oklch,var(--foreground)_4%,transparent)] [--card-spacing:--spacing(7)] has-[>img:first-child]:pt-0 data-[size=sm]:[--card-spacing:--spacing(5)] *:[img:first-child]:rounded-t-2xl *:[img:last-child]:rounded-b-2xl",
         className
       )}
       {...props}
@@ -37,10 +37,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn(
-        "text-lg font-semibold tracking-tight",
-        className
-      )}
+      className={cn("text-lg font-semibold tracking-[-0.02em]", className)}
       {...props}
     />
   )

@@ -13,13 +13,14 @@ export function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon"
+      size="icon-sm"
       onClick={toggle}
       aria-label="Toggle theme"
       title="Toggle theme (press d)"
+      className="rounded-xl border border-transparent hover:border-border/70 hover:bg-card"
     >
-      <Sun className="size-4" />
-      <Moon className="absolute size-4" />
+      <Sun className="size-4 dark:hidden" />
+      <Moon className="hidden size-4 dark:block" />
     </Button>
   )
 }

@@ -48,9 +48,7 @@ export function SessionPopover({ disabled }: SessionPopoverProps) {
   const sessionList = Object.values(sessions).sort((a, b) =>
     (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "")
   )
-  const activeSession = activeSessionName
-    ? sessions[activeSessionName]
-    : null
+  const activeSession = activeSessionName ? sessions[activeSessionName] : null
 
   const handleSelect = (name: string | null) => {
     if (!name) return
@@ -110,7 +108,7 @@ export function SessionPopover({ disabled }: SessionPopoverProps) {
     return (
       <div className="flex items-center gap-2 opacity-50">
         <Select disabled>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[88px] sm:w-[180px]">
             <SelectValue
               placeholder={hasSessions ? "No active session" : "First session"}
             />
@@ -122,12 +120,12 @@ export function SessionPopover({ disabled }: SessionPopoverProps) {
 
   return (
     <>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 sm:gap-1">
         <Select
           value={activeSessionName ?? undefined}
           onValueChange={handleSelect}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[88px] bg-card/70 sm:w-[180px]">
             <SelectValue placeholder="Select session" />
           </SelectTrigger>
           <SelectContent>
@@ -141,7 +139,7 @@ export function SessionPopover({ disabled }: SessionPopoverProps) {
 
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           onClick={handleNew}
           title="New session"
         >
@@ -150,7 +148,7 @@ export function SessionPopover({ disabled }: SessionPopoverProps) {
 
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           onClick={() => {
             setNewName(activeSessionName ?? "")
             setRenameError("")
@@ -164,7 +162,7 @@ export function SessionPopover({ disabled }: SessionPopoverProps) {
 
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           onClick={() => setDeleteOpen(true)}
           disabled={!activeSession}
           title="Delete session"
@@ -199,10 +197,7 @@ export function SessionPopover({ disabled }: SessionPopoverProps) {
             )}
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setRenameOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setRenameOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleRenameSubmit}>Rename</Button>
@@ -223,10 +218,7 @@ export function SessionPopover({ disabled }: SessionPopoverProps) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setDeleteOpen(false)}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteSubmit}>
