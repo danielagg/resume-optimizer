@@ -1,14 +1,20 @@
 {
   "name": "resume-optimizer",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
+  "bin": {
+    "resume-optimizer": "./cli/index.ts"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "build:cli": "bun build cli/index.ts --compile --minify --outfile dist/resume-optimizer",
+    "cli": "bun run cli/index.ts",
+    "test": "bun test",
+    "lint": "bun ./node_modules/eslint/bin/eslint.js .",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "preview": "vite preview"
   },
   "dependencies": {

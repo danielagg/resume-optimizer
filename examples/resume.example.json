@@ -1,0 +1,44 @@
+{
+  "fullName": "Ada Lovelace",
+  "headline": "Software Engineer",
+  "location": "London, UK",
+  "email": "ada@example.com",
+  "phone": null,
+  "profile": "Software engineer focused on dependable analytical systems and clear technical communication.",
+  "socials": [
+    {
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/in/example"
+    }
+  ],
+  "workExperience": [
+    {
+      "positionTitle": "Software Engineer",
+      "company": "Analytical Engines",
+      "location": "London, UK",
+      "from": "Jan 2022",
+      "to": null,
+      "description": "Designs and delivers software for complex analytical workflows.",
+      "keyAchievements": [
+        "Simplified a critical workflow while preserving its existing behavior."
+      ],
+      "techStack": ["TypeScript", "PostgreSQL"],
+      "methodologies": ["Agile"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "BSc Computer Science",
+      "university": "Example University",
+      "from": "2018",
+      "to": "2021"
+    }
+  ],
+  "otherAchievements": [],
+  "languages": [
+    {
+      "name": "English",
+      "level": "Native"
+    }
+  ]
+}
