@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.5.1",
-    "openai": "^6.45.0",
     "react": "^19.2.6",
     "zod": "^4.4.3"
   },

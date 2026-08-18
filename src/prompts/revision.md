@@ -40,7 +40,7 @@ Each Note:
 
 - `severity`: `"Critical"`, `"Important"`, `"Medium"`, `"Low"`, or `"Info"`
 - `text`: honest, specific feedback
-- `suggestedFix` (optional): concrete proposed edit; omit for Info Notes
+- `suggestedFix`: concrete proposed edit, or `null` for Info Notes
 
 If you have nothing new to surface, return an empty array — that signals convergence and the user's CV is ready.
 
@@ -53,10 +53,10 @@ If you have nothing new to surface, return an empty array — that signals conve
     {
       "severity": "Critical" | "Important" | "Medium" | "Low" | "Info",
       "text": "...",
-      "suggestedFix": "..."
+      "suggestedFix": "..." or null
     }
   ]
 }
 ```
 
-`suggestedFix` optional. `notes` array always present (empty if nothing to surface). Preserve contact details verbatim except where the user explicitly authorized changes. Never null out required fields. Never add fields not in the schema.
+`suggestedFix` is always present; use `null` when there is no concrete edit to suggest. `notes` array is always present (empty if nothing to surface). Preserve contact details verbatim except where the user explicitly authorized changes. Never null out required Resume fields. Never add fields not in the schema.

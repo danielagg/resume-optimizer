@@ -69,7 +69,7 @@ export type Severity = (typeof severities)[number]
 export const noteSchema = z.object({
   severity: z.enum(severities),
   text: z.string().min(1),
-  suggestedFix: z.string().optional(),
+  suggestedFix: z.string().nullable(),
 })
 export type Note = z.infer<typeof noteSchema>
 

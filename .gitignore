@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+.env
 base_cv.json
 tailored_cv.pdf
 
@@ -21,6 +22,3 @@ tailored_cv.pdf
 *.njsproj
 *.sln
 *.sw?
-
-# App specific
-base_cv.json

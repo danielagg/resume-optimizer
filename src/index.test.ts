@@ -56,8 +56,8 @@ describe("readJobPosting", () => {
         prompts.push(prompt)
         return ""
       },
-      readBlock: async (prompt, endMarker) => {
-        prompts.push(`${prompt} [${endMarker}]`)
+      readBlock: async (prompt) => {
+        prompts.push(prompt)
         return "Senior engineer\nTypeScript required"
       },
     })
@@ -65,7 +65,7 @@ describe("readJobPosting", () => {
     expect(posting).toBe("Senior engineer\nTypeScript required")
     expect(prompts).toEqual([
       "Job Posting ([Enter] paste text, or enter URL): ",
-      "Paste the description/requirements. Finish with END on its own line: [END]",
+      "Paste the description/requirements, then press Enter once. Continuing automatically…",
     ])
   })
 
@@ -90,7 +90,6 @@ describe("runAlignmentLoop", () => {
     let call = 0
 
     const result = await runAlignmentLoop({
-      apiKey: "test-key",
       baseResume: resume,
       jobPosting: "Senior TypeScript engineer",
       readline: {

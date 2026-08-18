@@ -36,7 +36,7 @@ Anything you wanted to do during alignment but couldn't, because it would violat
 
 - `severity`: one of `"Critical"`, `"Important"`, `"Medium"`, `"Low"`, `"Info"`
 - `text`: the feedback itself, honest and specific
-- `suggestedFix` (optional): a concrete proposed edit you would have made but couldn't. Omit for pure awareness Notes that have no Resume edit to propose.
+- `suggestedFix`: a concrete proposed edit you would have made but couldn't, or `null` for pure awareness Notes that have no Resume edit to propose.
 
 ### Severity guidelines
 
@@ -44,13 +44,13 @@ Anything you wanted to do during alignment but couldn't, because it would violat
 - **Important** — a significant gap or mismatch that will likely cost the candidate an interview
 - **Medium** — a worthwhile improvement that would strengthen the application
 - **Low** — a minor polish item
-- **Info** — pure awareness feedback with no Resume edit to make (e.g. "you have a 6-month gap — prepare an explanation if asked"). Info Notes should never include `suggestedFix`.
+- **Info** — pure awareness feedback with no Resume edit to make (e.g. "you have a 6-month gap — prepare an explanation if asked"). Info Notes must use `null` for `suggestedFix`.
 
 ### Examples
 
 - Critical, text: "The Job Posting requires Kubernetes, which is missing from all your tech stacks.", suggestedFix: "Add 'Kubernetes' to the tech_stack of your ACME Corp role if you have exposure."
 - Important, text: "Your headline 'Full Stack Developer' undersells you for this Senior Platform Engineer posting.", suggestedFix: "Change headline to 'Senior Platform Engineer' if you're comfortable with that positioning."
-- Info, text: "You have a 6-month gap between two roles — prepare an explanation if asked."
+- Info, text: "You have a 6-month gap between two roles — prepare an explanation if asked.", suggestedFix: `null`
 - Low, text: "Your profile is shorter than typical for this seniority.", suggestedFix: "Add 1-2 sentences to your profile highlighting your systems-design experience."
 
 ### Empty Notes
@@ -99,10 +99,10 @@ Return a single JSON object matching this shape exactly:
     {
       "severity": "Critical" | "Important" | "Medium" | "Low" | "Info",
       "text": "...",
-      "suggestedFix": "..."
+      "suggestedFix": "..." or null
     }
   ]
 }
 ```
 
-`suggestedFix` is optional — omit it for Info Notes or when there's no concrete edit to suggest. Preserve contact details verbatim. Preserve date strings verbatim. Never null out required fields. Never add fields that aren't in the schema.
+`suggestedFix` is always present — use `null` for Info Notes or when there's no concrete edit to suggest. Preserve contact details verbatim. Preserve date strings verbatim. Never null out required Resume fields. Never add fields that aren't in the schema.

@@ -17,7 +17,7 @@ interface Prompter {
 }
 
 interface PostingInput extends Prompter {
-  readBlock(prompt: string, endMarker: string): Promise<string>
+  readBlock(prompt: string): Promise<string>
 }
 
 class TerminalInput implements PostingInput {
@@ -28,9 +28,11 @@ class TerminalInput implements PostingInput {
     reject: (error: Error) => void
   }> = []
   private closed = false
+  private lineVersion = 0
 
   constructor() {
     this.readline.on("line", (line) => {
+      this.lineVersion += 1
       const waiter = this.waiters.shift()
       if (waiter) waiter.resolve(line)
       else this.queuedLines.push(line)
@@ -56,13 +58,18 @@ class TerminalInput implements PostingInput {
     return this.nextLine()
   }
 
-  async readBlock(prompt: string, endMarker: string): Promise<string> {
+  async readBlock(prompt: string): Promise<string> {
     console.log(prompt)
-    const lines: string[] = []
+    const lines = [await this.nextLine()]
+    let observedVersion = this.lineVersion
+
     while (true) {
-      const line = await this.nextLine()
-      if (line.trim() === endMarker) return lines.join("\n").trim()
-      lines.push(line)
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      lines.push(...this.queuedLines.splice(0))
+      if (observedVersion === this.lineVersion) {
+        return lines.join("\n").trim()
+      }
+      observedVersion = this.lineVersion
     }
   }
 
@@ -179,8 +186,7 @@ export async function readJobPosting(
     if (/^https?:\/\//i.test(trimmed)) return fetchPosting(trimmed)
 
     const rest = await input.readBlock(
-      "Paste the description/requirements. Finish with END on its own line:",
-      "END"
+      "Paste the description/requirements, then press Enter once. Continuing automatically…"
     )
     const jobPosting = [source, rest].filter(Boolean).join("\n").trim()
     if (jobPosting) return jobPosting
@@ -269,21 +275,18 @@ async function collectRevisionInput(
 }
 
 async function align(
-  apiKey: string,
   resume: Resume,
   jobPosting: string,
   complete: Complete
 ): Promise<{ alignedResume: Resume; notes: Note[] }> {
   console.log("\nAligning Resume…")
   return complete({
-    apiKey,
     systemPrompt: promptFor("alignment"),
     userPayload: { resume, job_posting: jobPosting },
   })
 }
 
 async function revise(
-  apiKey: string,
   jobPosting: string,
   currentResume: Resume,
   addressedNotes: Array<Note & { userResponse: string | null }>,
@@ -292,7 +295,6 @@ async function revise(
 ): Promise<{ alignedResume: Resume; notes: Note[] }> {
   console.log("\nRevising Resume…")
   return complete({
-    apiKey,
     systemPrompt: promptFor("revision"),
     userPayload: {
       jobPosting,
@@ -313,19 +315,17 @@ async function revise(
 }
 
 export async function runAlignmentLoop({
-  apiKey,
   baseResume,
   jobPosting,
   readline,
   complete = runResumeCompletion,
 }: {
-  apiKey: string
   baseResume: Resume
   jobPosting: string
   readline: Prompter
   complete?: Complete
 }): Promise<Resume> {
-  let result = await align(apiKey, baseResume, jobPosting, complete)
+  let result = await align(baseResume, jobPosting, complete)
 
   while (result.notes.length > 0) {
     printNotes(result.notes)
@@ -338,7 +338,6 @@ export async function runAlignmentLoop({
       selected
     )
     result = await revise(
-      apiKey,
       jobPosting,
       result.alignedResume,
       revisionInput.addressedNotes,
@@ -355,11 +354,8 @@ async function main(): Promise<void> {
 
   try {
     const jobPosting = await readJobPosting(input)
-    const apiKey = process.env.OPENAI_API_KEY?.trim()
-    if (!apiKey) throw new Error("Set OPENAI_API_KEY before running the tool.")
     const baseResume = await loadBaseResume()
     const finalResume = await runAlignmentLoop({
-      apiKey,
       baseResume,
       jobPosting,
       readline: input,
