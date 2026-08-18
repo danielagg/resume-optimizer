@@ -1,5 +1,5 @@
 import OpenAI from "openai"
-import { alignmentResponseSchema, type AlignmentResponse } from "@/types/resume"
+import { alignmentResponseSchema, type AlignmentResponse } from "./resume"
 
 export type AlignmentErrorKind =
   | "invalid-api-key"

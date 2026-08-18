@@ -1,15 +1,13 @@
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  StyleSheet,
-} from "@react-pdf/renderer"
-import type { Resume } from "@/types/resume"
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
+import type { Resume } from "./resume"
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 10, fontFamily: "Helvetica" },
-  header: { paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: "#cccccc" },
+  page: { padding: 36, fontSize: 10, fontFamily: "Helvetica" },
+  header: {
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#cccccc",
+  },
   name: { fontSize: 20, fontFamily: "Helvetica-Bold" },
   headline: { fontSize: 10, color: "#555" },
   meta: { fontSize: 8, color: "#555", marginTop: 4, flexWrap: "wrap" },
@@ -18,14 +16,18 @@ const styles = StyleSheet.create({
     color: "#555",
     textTransform: "uppercase",
     letterSpacing: 1,
-    marginTop: 14,
-    marginBottom: 4,
+    marginTop: 10,
+    marginBottom: 3,
   },
-  row: { flexDirection: "row", justifyContentContent: "space-between", marginBottom: 2 },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 2,
+  },
   jobTitle: { fontSize: 10, fontFamily: "Helvetica-Bold" },
   jobMeta: { fontSize: 8, color: "#555" },
-  body: { fontSize: 9, lineHeight: 1.4, marginTop: 2 },
-  bullet: { fontSize: 9, marginLeft: 10, marginBottom: 1, lineHeight: 1.4 },
+  body: { fontSize: 9, lineHeight: 1.35, marginTop: 2 },
+  bullet: { fontSize: 9, marginLeft: 10, marginBottom: 1, lineHeight: 1.35 },
   tech: { fontSize: 8, color: "#555", marginTop: 2 },
 })
 
@@ -60,7 +62,7 @@ export function ResumePdfTemplate({ resume }: PdfTemplateProps) {
           <View>
             <Text style={styles.sectionTitle}>Work Experience</Text>
             {resume.workExperience.map((exp, i) => (
-              <View key={i} style={{ marginBottom: 6 }}>
+              <View key={i} style={{ marginBottom: 4 }}>
                 <View style={[styles.row, { justifyContent: "space-between" }]}>
                   <Text style={styles.jobTitle}>
                     {exp.positionTitle} · {exp.company}
@@ -82,7 +84,8 @@ export function ResumePdfTemplate({ resume }: PdfTemplateProps) {
                 ))}
                 {(exp.techStack.length > 0 || exp.methodologies.length > 0) && (
                   <Text style={styles.tech}>
-                    {exp.techStack.length > 0 && `Stack: ${exp.techStack.join(", ")}. `}
+                    {exp.techStack.length > 0 &&
+                      `Stack: ${exp.techStack.join(", ")}. `}
                     {exp.methodologies.length > 0 &&
                       `Methodologies: ${exp.methodologies.join(", ")}.`}
                   </Text>
@@ -96,7 +99,10 @@ export function ResumePdfTemplate({ resume }: PdfTemplateProps) {
           <View>
             <Text style={styles.sectionTitle}>Education</Text>
             {resume.education.map((edu, i) => (
-              <View key={i} style={[styles.row, { justifyContent: "space-between" }]}>
+              <View
+                key={i}
+                style={[styles.row, { justifyContent: "space-between" }]}
+              >
                 <View>
                   <Text style={styles.jobTitle}>{edu.degree}</Text>
                   <Text style={styles.jobMeta}>{edu.university}</Text>
@@ -125,7 +131,9 @@ export function ResumePdfTemplate({ resume }: PdfTemplateProps) {
           <View>
             <Text style={styles.sectionTitle}>Languages</Text>
             <Text style={styles.body}>
-              {resume.languages.map((l) => `${l.name} (${l.level})`).join(" · ")}
+              {resume.languages
+                .map((l) => `${l.name} (${l.level})`)
+                .join(" · ")}
             </Text>
           </View>
         )}

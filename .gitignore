@@ -8,10 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
-dist-ssr
-*.local
-.resume-optimizer/
+base_cv.json
+tailored_cv.pdf
 
 # Editor directories and files
 .vscode/*
@@ -23,3 +21,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# App specific
+base_cv.json

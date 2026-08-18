@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { AlignmentError, parseAlignmentResponse } from "../src/lib/resume-ai"
+import { AlignmentError, parseAlignmentResponse } from "./resume-ai"
 
 const validResponse = {
   alignedResume: {

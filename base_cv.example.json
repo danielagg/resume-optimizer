@@ -1,0 +1,54 @@
+{
+  "fullName": "Your Name",
+  "headline": "Your Professional Headline",
+  "location": "City, Country",
+  "email": "you@example.com",
+  "phone": "+00 123 456 789",
+  "profile": "A concise professional summary describing your experience, strengths, and the kind of work you do.",
+  "socials": [
+    {
+      "label": "LinkedIn",
+      "url": "https://www.linkedin.com/in/your-profile"
+    },
+    {
+      "label": "GitHub",
+      "url": "https://github.com/your-username"
+    }
+  ],
+  "workExperience": [
+    {
+      "positionTitle": "Your Position Title",
+      "company": "Company Name",
+      "location": "City, Country",
+      "from": "Jan 2022",
+      "to": null,
+      "description": "A short description of your role, responsibilities, and scope.",
+      "keyAchievements": [
+        "Describe a concrete achievement and its impact.",
+        "Describe another meaningful contribution."
+      ],
+      "techStack": ["TypeScript", "PostgreSQL"],
+      "methodologies": ["Agile", "Continuous Delivery"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree or Qualification",
+      "university": "Institution Name",
+      "from": "2016",
+      "to": "2020"
+    }
+  ],
+  "otherAchievements": [
+    {
+      "name": "Certification, award, publication, or other achievement",
+      "date": "2024"
+    }
+  ],
+  "languages": [
+    {
+      "name": "English",
+      "level": "Fluent"
+    }
+  ]
+}

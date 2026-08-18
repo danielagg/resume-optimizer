@@ -1,7 +1,7 @@
 import { resolve } from "node:path"
 import { renderToFile } from "@react-pdf/renderer"
-import { ResumePdfTemplate } from "../src/components/template/resume-pdf-template"
-import type { Resume } from "../src/types/resume"
+import { ResumePdfTemplate } from "./resume-pdf-template"
+import type { Resume } from "./resume"
 
 export async function exportPdf(
   resume: Resume,
