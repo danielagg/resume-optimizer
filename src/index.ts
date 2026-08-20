@@ -2,8 +2,18 @@
 
 import { readFile } from "node:fs/promises"
 import { resolve } from "node:path"
-import { createInterface } from "node:readline"
+import {
+  cancel,
+  intro,
+  isCancel,
+  multiselect,
+  note as showNote,
+  outro,
+  spinner,
+  text,
+} from "@clack/prompts"
 import { exportPdf } from "./export-pdf"
+import { PasteCancelledError, promptForPastedText } from "./paste-input"
 import { promptFor } from "./prompts"
 import { runResumeCompletion } from "./resume-ai"
 import { resumeSchema, type Note, type Resume } from "./resume"
@@ -12,108 +22,77 @@ const BASE_CV_PATH = resolve("base_cv.json")
 const OUTPUT_PATH = resolve("tailored_cv.pdf")
 type Complete = typeof runResumeCompletion
 
-interface Prompter {
-  ask(prompt: string): Promise<string>
+interface ReviewInput {
+  selectAction(notes: Note[]): Promise<ReviewAction>
+  askInstruction(note: Note, index: number): Promise<string>
 }
 
-interface PostingInput extends Prompter {
-  readBlock(prompt: string): Promise<string>
+type ReviewAction = { kind: "finish" } | { kind: "revise"; selected: number[] }
+
+const FINISH_ACTION = "finish" as const
+
+class UserCancelledError extends Error {}
+
+function unwrapPrompt<T>(value: T | symbol): T {
+  if (isCancel(value)) {
+    cancel("Cancelled — no PDF was generated.")
+    throw new UserCancelledError()
+  }
+  return value
 }
 
-class TerminalInput implements PostingInput {
-  private readonly readline = createInterface({ input: process.stdin })
-  private readonly queuedLines: string[] = []
-  private readonly waiters: Array<{
-    resolve: (line: string) => void
-    reject: (error: Error) => void
-  }> = []
-  private closed = false
-  private lineVersion = 0
+const interactiveReview: ReviewInput = {
+  async selectAction(notes) {
+    const selected = unwrapPrompt(
+      await multiselect<number | typeof FINISH_ACTION>({
+        message: "Select revisions, or finish with the current Resume",
+        options: [
+          {
+            value: FINISH_ACTION,
+            label: "Finished, generate PDF",
+            hint: "use the current Resume JSON",
+          },
+          ...notes.map((note, index) => ({
+            value: index,
+            label: `[${note.severity}] ${note.text}`,
+            hint: note.severity === "Info" ? "awareness only" : undefined,
+            disabled: note.severity === "Info",
+          })),
+        ],
+        required: true,
+      })
+    )
 
-  constructor() {
-    this.readline.on("line", (line) => {
-      this.lineVersion += 1
-      const waiter = this.waiters.shift()
-      if (waiter) waiter.resolve(line)
-      else this.queuedLines.push(line)
-    })
-    this.readline.on("close", () => {
-      this.closed = true
-      const error = new Error("Input closed before the workflow finished.")
-      this.waiters.splice(0).forEach((waiter) => waiter.reject(error))
-    })
-  }
-
-  private nextLine(): Promise<string> {
-    const queued = this.queuedLines.shift()
-    if (queued !== undefined) return Promise.resolve(queued)
-    if (this.closed) return Promise.reject(new Error("Input is closed."))
-    return new Promise((resolve, reject) => {
-      this.waiters.push({ resolve, reject })
-    })
-  }
-
-  ask(prompt: string): Promise<string> {
-    process.stdout.write(prompt)
-    return this.nextLine()
-  }
-
-  async readBlock(prompt: string): Promise<string> {
-    console.log(prompt)
-    const lines = [await this.nextLine()]
-    let observedVersion = this.lineVersion
-
-    while (true) {
-      await new Promise((resolve) => setTimeout(resolve, 600))
-      lines.push(...this.queuedLines.splice(0))
-      if (observedVersion === this.lineVersion) {
-        return lines.join("\n").trim()
-      }
-      observedVersion = this.lineVersion
+    if (selected.includes(FINISH_ACTION)) return { kind: "finish" }
+    return {
+      kind: "revise",
+      selected: selected.filter((value): value is number =>
+        Number.isInteger(value)
+      ),
     }
-  }
+  },
 
-  close(): void {
-    this.readline.close()
-  }
-}
-
-function decodeHtml(value: string): string {
-  const namedEntities: Record<string, string> = {
-    amp: "&",
-    apos: "'",
-    gt: ">",
-    lt: "<",
-    nbsp: " ",
-    quot: '"',
-  }
-
-  return value.replace(
-    /&(#\d+|#x[\da-f]+|[a-z]+);/gi,
-    (entity, code: string) => {
-      if (code.startsWith("#x")) {
-        return String.fromCodePoint(Number.parseInt(code.slice(2), 16))
-      }
-      if (code.startsWith("#")) {
-        return String.fromCodePoint(Number.parseInt(code.slice(1), 10))
-      }
-      return namedEntities[code.toLowerCase()] ?? entity
+  async askInstruction(note, index) {
+    if (note.suggestedFix) {
+      showNote(note.suggestedFix, `Suggested fix for point ${index + 1}`)
     }
-  )
-}
 
-export function htmlToText(html: string): string {
-  return decodeHtml(
-    html
-      .replace(/<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi, " ")
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/(address|article|div|h[1-6]|li|p|section)>/gi, "\n")
-      .replace(/<[^>]+>/g, " ")
-  )
-    .replace(/[^\S\n]+/g, " ")
-    .replace(/ *\n */g, "\n")
-    .replace(/\n{2,}/g, "\n")
-    .trim()
+    return unwrapPrompt(
+      await text({
+        message: note.suggestedFix
+          ? "Press Enter to apply the suggestion, or type another instruction"
+          : `How should point ${index + 1} be addressed?`,
+        placeholder: note.suggestedFix
+          ? "Apply suggested fix"
+          : "Describe the change",
+        validate(value) {
+          if (!note.suggestedFix && !value?.trim()) {
+            return "An instruction is required for this point."
+          }
+        },
+      })
+    )
+  },
 }
 
 async function loadBaseResume(): Promise<Resume> {
@@ -141,108 +120,26 @@ async function loadBaseResume(): Promise<Resume> {
   return result.data
 }
 
-async function fetchJobPosting(url: string): Promise<string> {
-  let parsedUrl: URL
-  try {
-    parsedUrl = new URL(url)
-  } catch {
-    throw new Error("The Job Posting must be a valid URL.")
+export async function readJobPosting(
+  paste: () => Promise<string> = async () => {
+    try {
+      return await promptForPastedText()
+    } catch (error) {
+      if (error instanceof PasteCancelledError) {
+        cancel("Cancelled — no PDF was generated.")
+        throw new UserCancelledError()
+      }
+      throw error
+    }
   }
-  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-    throw new Error("The Job Posting URL must use HTTP or HTTPS.")
-  }
-
-  console.log("Fetching Job Posting…")
-  const response = await fetch(parsedUrl, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; ResumeOptimizer/1.0; +local CLI)",
-    },
-  })
-  if (!response.ok) {
-    throw new Error(
-      `Could not fetch the Job Posting (${response.status} ${response.statusText}).`
-    )
-  }
-
-  const body = await response.text()
-  const contentType = response.headers.get("content-type") ?? ""
-  const jobPosting = contentType.includes("html")
-    ? htmlToText(body)
-    : body.trim()
-  if (!jobPosting) throw new Error("The Job Posting page contained no text.")
+): Promise<string> {
+  const jobPosting = (await paste()).trim()
+  if (!jobPosting) throw new Error("The job description cannot be empty.")
   return jobPosting
 }
 
-export async function readJobPosting(
-  input: PostingInput,
-  fetchPosting: (url: string) => Promise<string> = fetchJobPosting
-): Promise<string> {
-  while (true) {
-    const source = await input.ask(
-      "Job Posting ([Enter] paste text, or enter URL): "
-    )
-    const trimmed = source.trim()
-
-    if (/^https?:\/\//i.test(trimmed)) return fetchPosting(trimmed)
-
-    const rest = await input.readBlock(
-      "Paste the description/requirements, then press Enter once. Continuing automatically…"
-    )
-    const jobPosting = [source, rest].filter(Boolean).join("\n").trim()
-    if (jobPosting) return jobPosting
-    console.log("The Job Posting cannot be empty.\n")
-  }
-}
-
-function printNotes(notes: Note[]): void {
-  console.log("")
-  notes.forEach((note, index) => {
-    console.log(`${index + 1}. [${note.severity}] ${note.text}`)
-    if (note.suggestedFix) console.log(`   Suggested: ${note.suggestedFix}`)
-    if (note.severity === "Info") console.log("   Awareness only")
-    console.log("")
-  })
-}
-
-function parseSelection(answer: string, notes: Note[]): number[] {
-  if (!answer.trim()) return []
-
-  const selected = [
-    ...new Set(
-      answer.split(",").map((value) => Number.parseInt(value.trim(), 10) - 1)
-    ),
-  ]
-  const invalid = selected.find(
-    (index) =>
-      !Number.isInteger(index) ||
-      index < 0 ||
-      index >= notes.length ||
-      notes[index]?.severity === "Info"
-  )
-  if (invalid !== undefined) {
-    throw new Error("Choose valid, non-Info Note numbers separated by commas.")
-  }
-  return selected
-}
-
-async function askForSelection(
-  readline: Prompter,
-  notes: Note[]
-): Promise<number[]> {
-  while (true) {
-    const answer = await readline.ask(
-      "Notes to address (comma-separated, or Enter to finish): "
-    )
-    try {
-      return parseSelection(answer, notes)
-    } catch (error) {
-      console.log((error as Error).message)
-    }
-  }
-}
-
 async function collectRevisionInput(
-  readline: Prompter,
+  review: ReviewInput,
   notes: Note[],
   selected: number[]
 ): Promise<{
@@ -254,14 +151,7 @@ async function collectRevisionInput(
 
   for (const index of selected) {
     const note = notes[index]
-    let response = await readline.ask(
-      note.suggestedFix
-        ? `Instruction for Note ${index + 1} (Enter = apply suggestion): `
-        : `Instruction for Note ${index + 1}: `
-    )
-    while (!note.suggestedFix && !response.trim()) {
-      response = await readline.ask("An instruction is required: ")
-    }
+    const response = await review.askInstruction(note, index)
     addressedNotes.push({
       ...note,
       userResponse: response.trim() || null,
@@ -274,16 +164,36 @@ async function collectRevisionInput(
   }
 }
 
+async function withProgress<T>(
+  activeMessage: string,
+  doneMessage: string,
+  task: () => Promise<T>
+): Promise<T> {
+  if (!process.stdout.isTTY) return task()
+
+  const progress = spinner()
+  progress.start(activeMessage)
+  try {
+    const result = await task()
+    progress.stop(doneMessage)
+    return result
+  } catch (error) {
+    progress.error(`${activeMessage} failed`)
+    throw error
+  }
+}
+
 async function align(
   resume: Resume,
   jobPosting: string,
   complete: Complete
 ): Promise<{ alignedResume: Resume; notes: Note[] }> {
-  console.log("\nAligning Resume…")
-  return complete({
-    systemPrompt: promptFor("alignment"),
-    userPayload: { resume, job_posting: jobPosting },
-  })
+  return withProgress("Aligning Resume with Codex", "Alignment ready", () =>
+    complete({
+      systemPrompt: promptFor("alignment"),
+      userPayload: { resume, job_posting: jobPosting },
+    })
+  )
 }
 
 async function revise(
@@ -293,49 +203,50 @@ async function revise(
   dismissedNotes: Note[],
   complete: Complete
 ): Promise<{ alignedResume: Resume; notes: Note[] }> {
-  console.log("\nRevising Resume…")
-  return complete({
-    systemPrompt: promptFor("revision"),
-    userPayload: {
-      jobPosting,
-      currentAlignedResume: currentResume,
-      addressedNotes: addressedNotes.map((note) => ({
-        severity: note.severity,
-        text: note.text,
-        suggestedFix: note.suggestedFix ?? null,
-        userResponse: note.userResponse,
-      })),
-      dismissedNotes: dismissedNotes.map((note) => ({
-        severity: note.severity,
-        text: note.text,
-        suggestedFix: note.suggestedFix ?? null,
-      })),
-    },
-  })
+  return withProgress("Revising Resume JSON", "Revision ready", () =>
+    complete({
+      systemPrompt: promptFor("revision"),
+      userPayload: {
+        jobPosting,
+        currentAlignedResume: currentResume,
+        addressedNotes: addressedNotes.map((note) => ({
+          severity: note.severity,
+          text: note.text,
+          suggestedFix: note.suggestedFix,
+          userResponse: note.userResponse,
+        })),
+        dismissedNotes: dismissedNotes.map((note) => ({
+          severity: note.severity,
+          text: note.text,
+          suggestedFix: note.suggestedFix,
+        })),
+      },
+    })
+  )
 }
 
 export async function runAlignmentLoop({
   baseResume,
   jobPosting,
-  readline,
+  review = interactiveReview,
   complete = runResumeCompletion,
 }: {
   baseResume: Resume
   jobPosting: string
-  readline: Prompter
+  review?: ReviewInput
   complete?: Complete
 }): Promise<Resume> {
   let result = await align(baseResume, jobPosting, complete)
 
-  while (result.notes.length > 0) {
-    printNotes(result.notes)
-    const selected = await askForSelection(readline, result.notes)
-    if (selected.length === 0) break
+  while (true) {
+    const action = await review.selectAction(result.notes)
+    if (action.kind === "finish") break
+    if (action.selected.length === 0) continue
 
     const revisionInput = await collectRevisionInput(
-      readline,
+      review,
       result.notes,
-      selected
+      action.selected
     )
     result = await revise(
       jobPosting,
@@ -350,26 +261,22 @@ export async function runAlignmentLoop({
 }
 
 async function main(): Promise<void> {
-  const input = new TerminalInput()
+  intro("Resume Optimizer")
 
-  try {
-    const jobPosting = await readJobPosting(input)
-    const baseResume = await loadBaseResume()
-    const finalResume = await runAlignmentLoop({
-      baseResume,
-      jobPosting,
-      readline: input,
-    })
+  const jobPosting = await readJobPosting()
+  const baseResume = await loadBaseResume()
+  const finalResume = await runAlignmentLoop({
+    baseResume,
+    jobPosting,
+  })
 
-    await exportPdf(finalResume, OUTPUT_PATH)
-    console.log(`\nDone: ${OUTPUT_PATH}`)
-  } finally {
-    input.close()
-  }
+  await exportPdf(finalResume, OUTPUT_PATH)
+  outro(`PDF ready: ${OUTPUT_PATH}`)
 }
 
 if (import.meta.main) {
   main().catch((error: unknown) => {
+    if (error instanceof UserCancelledError) return
     const message = error instanceof Error ? error.message : String(error)
     console.error(`\nError: ${message}`)
     process.exitCode = 1

@@ -1,4 +1,11 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Link,
+} from "@react-pdf/renderer"
 import type { Resume } from "./resume"
 
 const styles = StyleSheet.create({
@@ -8,8 +15,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#cccccc",
   },
-  name: { fontSize: 20, fontFamily: "Helvetica-Bold" },
-  headline: { fontSize: 10, color: "#555" },
+  name: { fontSize: 18, fontFamily: "Helvetica-Bold" },
+  headline: {
+    fontSize: 8,
+    fontFamily: "Helvetica-Bold",
+    color: "#555",
+    marginTop: 2,
+  },
   meta: { fontSize: 8, color: "#555", marginTop: 4, flexWrap: "wrap" },
   sectionTitle: {
     fontSize: 8,
@@ -41,14 +53,20 @@ export function ResumePdfTemplate({ resume }: PdfTemplateProps) {
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <Text style={styles.name}>{resume.fullName}</Text>
-          <Text style={styles.headline}>{resume.headline}</Text>
+          <Text style={styles.headline}>
+            {resume.headline}, based in {resume.location}
+          </Text>
           <Text style={styles.meta}>
-            {resume.location}
-            {"  ·  "}
             {resume.email}
             {resume.phone ? `  ·  ${resume.phone}` : ""}
-            {resume.socials.map((s) => `  ·  ${s.label}: ${s.url}`)}
           </Text>
+          {resume.socials.map((s) => {
+            return (
+              <Link style={styles.meta} href={s.url}>
+                {s.label}
+              </Link>
+            )
+          })}
         </View>
 
         {resume.profile && (

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { htmlToText, readJobPosting, runAlignmentLoop } from "./index"
+import { readJobPosting, runAlignmentLoop } from "./index"
 import type { Resume } from "./resume"
 
 const resume: Resume = {
@@ -28,74 +28,50 @@ const resume: Resume = {
   languages: [],
 }
 
-describe("htmlToText", () => {
-  test("extracts readable Job Posting text", () => {
-    const html = `
-      <html>
-        <head><style>.hidden { display: none }</style></head>
-        <body>
-          <h1>Senior Engineer &amp; Technical Lead</h1>
-          <p>Build dependable systems.</p>
-          <ul><li>TypeScript</li><li>PostgreSQL</li></ul>
-          <script>ignoreMe()</script>
-        </body>
-      </html>
-    `
-
-    expect(htmlToText(html)).toBe(
-      "Senior Engineer & Technical Lead\nBuild dependable systems.\nTypeScript\nPostgreSQL"
-    )
-  })
-})
-
 describe("readJobPosting", () => {
-  test("uses multiline paste mode by default", async () => {
-    const prompts: string[] = []
-    const posting = await readJobPosting({
-      ask: async (prompt) => {
-        prompts.push(prompt)
-        return ""
-      },
-      readBlock: async (prompt) => {
-        prompts.push(prompt)
-        return "Senior engineer\nTypeScript required"
-      },
-    })
+  test("accepts a pasted multiline job description", async () => {
+    const posting = await readJobPosting(
+      async () => "  Senior engineer\nTypeScript required  "
+    )
 
     expect(posting).toBe("Senior engineer\nTypeScript required")
-    expect(prompts).toEqual([
-      "Job Posting ([Enter] paste text, or enter URL): ",
-      "Paste the description/requirements, then press Enter once. Continuing automatically…",
-    ])
   })
 
-  test("fetches a supplied URL", async () => {
-    const posting = await readJobPosting(
-      {
-        ask: async () => "https://example.com/job",
-        readBlock: async () => "unused",
-      },
-      async (url) => `Fetched ${url}`
-    )
+  test("rejects an empty job description", async () => {
+    let message = ""
+    try {
+      await readJobPosting(async () => "   ")
+    } catch (error) {
+      message = error instanceof Error ? error.message : String(error)
+    }
 
-    expect(posting).toBe("Fetched https://example.com/job")
+    expect(message).toBe("The job description cannot be empty.")
   })
 })
 
 describe("runAlignmentLoop", () => {
-  test("aligns, applies a selected Note, and stops on convergence", async () => {
-    const answers = ["1", ""]
-    const prompts: string[] = []
+  test("aligns, applies checked points, and finishes explicitly", async () => {
+    const reviewEvents: string[] = []
     const payloads: unknown[] = []
     let call = 0
+    let reviewCount = 0
 
     const result = await runAlignmentLoop({
       baseResume: resume,
       jobPosting: "Senior TypeScript engineer",
-      readline: {
-        ask: async (prompt) => {
-          prompts.push(prompt)
-          return answers.shift() ?? ""
+      review: {
+        selectAction: async () => {
+          if (reviewCount === 0) {
+            reviewCount += 1
+            reviewEvents.push("selected:0")
+            return { kind: "revise", selected: [0] }
+          }
+          reviewEvents.push("finished")
+          return { kind: "finish" }
+        },
+        askInstruction: async (_note, index) => {
+          reviewEvents.push(`instruction:${index}`)
+          return ""
         },
       },
       complete: async ({ userPayload }) => {
@@ -120,10 +96,62 @@ describe("runAlignmentLoop", () => {
     })
 
     expect(result.headline).toBe("Senior Engineer")
-    expect(prompts).toEqual([
-      "Notes to address (comma-separated, or Enter to finish): ",
-      "Instruction for Note 1 (Enter = apply suggestion): ",
-    ])
+    expect(reviewEvents).toEqual(["selected:0", "instruction:0", "finished"])
     expect(payloads.length).toBe(2)
+  })
+
+  test("always offers an explicit finish action", async () => {
+    let calls = 0
+    const noteCounts: number[] = []
+    const result = await runAlignmentLoop({
+      baseResume: resume,
+      jobPosting: "TypeScript engineer",
+      review: {
+        selectAction: async (notes) => {
+          noteCounts.push(notes.length)
+          return { kind: "finish" }
+        },
+        askInstruction: async () => "unused",
+      },
+      complete: async () => {
+        calls += 1
+        return {
+          alignedResume: resume,
+          notes: [
+            {
+              severity: "Info",
+              text: "Prepare to discuss your experience.",
+              suggestedFix: null,
+            },
+          ],
+        }
+      },
+    })
+
+    expect(result).toEqual(resume)
+    expect(calls).toBe(1)
+    expect(noteCounts).toEqual([1])
+  })
+
+  test("requires explicit finishing even after Codex has no more notes", async () => {
+    const noteCounts: number[] = []
+    const result = await runAlignmentLoop({
+      baseResume: resume,
+      jobPosting: "TypeScript engineer",
+      review: {
+        selectAction: async (notes) => {
+          noteCounts.push(notes.length)
+          return { kind: "finish" }
+        },
+        askInstruction: async () => "unused",
+      },
+      complete: async () => ({
+        alignedResume: { ...resume, headline: "Senior Engineer" },
+        notes: [],
+      }),
+    })
+
+    expect(result.headline).toBe("Senior Engineer")
+    expect(noteCounts).toEqual([0])
   })
 })
